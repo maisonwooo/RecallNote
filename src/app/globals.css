@@ -5,12 +5,22 @@
   --background: #f6f4ef;
   --foreground: #2b2a27;
   --muted: #6b675f;
+  --surface: #fbfaf6;
+  --border: #d9d5ca;
+  --accent: #35654f;
+  --accent-soft: #e3ece6;
+  --danger: #9c3a2a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -18,6 +28,11 @@
     --background: #1e1f22;
     --foreground: #e4e2dc;
     --muted: #a09c93;
+    --surface: #26272b;
+    --border: #3b3c41;
+    --accent: #8fc2a8;
+    --accent-soft: #2b3a33;
+    --danger: #e59a8a;
   }
 }
 
@@ -34,6 +49,46 @@ body {
     system-ui, sans-serif;
   line-height: 1.7;
   font-variant-numeric: tabular-nums;
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface px-4 py-2 text-base no-underline;
+  }
+  .btn:hover {
+    @apply border-accent;
+  }
+  .btn-primary {
+    @apply border-accent bg-accent font-medium;
+    color: var(--background);
+  }
+  .btn-danger {
+    @apply text-danger;
+  }
+  .btn:disabled {
+    @apply cursor-not-allowed opacity-60;
+  }
+  .input {
+    @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-base;
+  }
+  .chip {
+    @apply inline-flex min-h-8 items-center rounded-full border border-border px-3 text-sm no-underline;
+  }
+  .chip-on {
+    @apply border-accent bg-accent-soft font-medium;
+  }
+  .panel {
+    @apply rounded-xl border border-border bg-surface p-5;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

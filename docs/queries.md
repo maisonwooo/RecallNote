@@ -34,9 +34,25 @@ FROM cards
 
 ---
 
-## 연습 문제 ② 태그별 카드 개수 (③단계에서 출제)
+## 연습 문제 ② 태그별 카드 개수 (풀이 완료)
 
-`tags`, `card_tags`, `cards`를 이어서(`JOIN`) 태그 이름마다 카드가 몇 장인지 세는 문제예요. 핵심 단어는 `GROUP BY`와 `count(*)`. 삭제된 카드는 빼야 합니다.
+태그 이름마다 카드가 몇 장인지 센다. 삭제된 카드는 빼고, 많은 순으로 보여준다. (카드 목록의 태그 버튼 "보안 (3)"에 쓰인다.)
+
+```sql
+SELECT t.name, count(*) AS card_count
+FROM tags t
+JOIN card_tags ct ON ct.tag_id = t.id
+JOIN cards c      ON c.id = ct.card_id
+WHERE c.deleted_at IS NULL
+GROUP BY t.id
+ORDER BY card_count DESC;
+```
+
+- `GROUP BY t.id`: 같은 태그끼리 한 묶음으로 만들고, 묶음마다 `count(*)`로 줄 수를 센다.
+- `WHERE`는 묶기 **전에** 삭제된 카드를 걸러낸다.
+- `AS card_count`는 별명이라 `ORDER BY`에서는 `c.` 없이 이름만 쓴다.
+- 문제에 없는 조건(예: `due_date`)을 끼워 넣으면 다른 질문이 된다.
+- 예시 데이터 결과: 보안 3, http 2, git 1, 쉘 1.
 
 ---
 
@@ -79,6 +95,37 @@ GROUP BY result;
 ```sql
 SELECT filename, applied_at FROM schema_migrations ORDER BY filename;   -- 적용된 마이그레이션
 SELECT * FROM settings;                                                  -- 설정 값
+```
+
+### 카드 글자 검색 (질문 또는 답)
+```sql
+SELECT id, question FROM cards
+WHERE deleted_at IS NULL
+  AND (question LIKE :pattern ESCAPE '\' OR answer LIKE :pattern ESCAPE '\')
+ORDER BY created_at DESC, id DESC;
+```
+- `LIKE '%해시%'`: "해시"가 들어간 글을 찾는다. `%`는 "아무 글자 여러 개".
+- 검색어에 `%`나 `_`가 들어 있으면 의미가 바뀌어서, 앞에 `\`를 붙이고 `ESCAPE '\'`로 알려 준다 (코드의 `escapeLike`).
+- 영문 대소문자는 구분하지 않는다(한글은 대소문자가 없음).
+
+### 특정 태그가 붙은 카드만
+```sql
+SELECT c.id, c.question FROM cards c
+WHERE c.deleted_at IS NULL
+  AND EXISTS (SELECT 1 FROM card_tags ct JOIN tags t ON t.id = ct.tag_id
+              WHERE ct.card_id = c.id AND t.name = :tag);
+```
+- `EXISTS (...)`: 안쪽 질문에 해당하는 줄이 하나라도 있으면 참. 태그가 여러 개 붙은 카드가 중복으로 나오지 않는다.
+- `tags.name`은 대소문자 무시(`COLLATE NOCASE`) 열이라 `GIT`로 찾아도 `git`이 걸린다.
+
+### 카드 저장 (트랜잭션 안에서)
+```sql
+BEGIN;
+INSERT INTO cards (question, answer, source, due_date) VALUES (?, ?, ?, date('now', '+9 hours'));
+DELETE FROM card_tags WHERE card_id = :id;                      -- 수정할 때: 태그 연결을 지우고 새로 만든다
+INSERT INTO tags (name) VALUES (:name) ON CONFLICT (name) DO NOTHING;   -- 이미 있으면 그대로 둔다
+INSERT OR IGNORE INTO card_tags (card_id, tag_id) VALUES (:id, :tag_id);
+COMMIT;                                                         -- 중간에 오류가 나면 ROLLBACK 으로 전부 취소
 ```
 
 > 이후 단계에서 채울 쿼리: 복습 결과 반영(트랜잭션), 이번 주 집중 시간 합계, 태그 검색, 글자 검색.

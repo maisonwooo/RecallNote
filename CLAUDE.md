@@ -27,6 +27,9 @@
 - 정상 카드를 조회할 때는 항상 `deleted_at IS NULL`.
 - `cards.type`은 미리 만들어 두었지만 지금은 `qa`만 구현한다.
 - 핵심 쿼리는 `docs/queries.md`에 정리한다.
+- 카드 SQL은 `src/lib/cards.ts`에만 둔다(db를 첫 인자로 받음). 사용자 입력은 SQL 글자에 이어 붙이지 않고 `?`로 넘긴다. 검색어의 `%`, `_`, `\`는 `escapeLike`로 처리한다.
+- 여러 줄을 함께 바꾸는 저장(카드+태그)은 `withTransaction`으로 묶는다.
+- 화면 패턴: 페이지는 바깥에서 `Suspense`로 감싸고, 안쪽 async 컴포넌트에서 `await connection()` → `await params/searchParams` → DB 읽기. 폼은 Server Action(`src/app/cards/actions.ts`) + `useActionState`, 성공하면 `revalidatePath` 후 `redirect`(try 밖에서).
 - SQLite 라이브러리: **Node 내장 `node:sqlite`로 확정**. 코드는 `src/lib/db/`에 있다.
 - DB 접근은 `getDb()`(앱), `openAndMigrate(file)`(스크립트/테스트)만 쓴다. 서버 페이지에서 DB를 읽기 전에 `await connection()`(next/server)을 부른다. 이 Next.js는 Cache Components가 켜져 있어 이걸 빼면 DB 값이 미리 만들어진 화면에 굳을 수 있다.
 - `scripts/*.ts`, `tests/*.ts`는 Node가 직접 실행한다(`.ts` 확장자 import, `enum` 등 변환이 필요한 문법 금지).

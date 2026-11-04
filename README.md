@@ -2,7 +2,7 @@
 
 배운 개념을 "질문/답" 카드로 저장하고, 매일 복습하고, 공부 타이머와 눈 휴식까지 챙기는 **나만 쓰는 로컬 학습 노트 앱**.
 
-> 상태: ② 프로젝트 뼈대 + DB 마이그레이션 + 예시 데이터까지 완료. 카드·복습·타이머 화면은 ③단계부터 만듭니다.
+> 상태: ③ 카드(만들기/목록/검색/태그/수정/삭제/보관함)까지 완료. 오늘의 복습·타이머는 다음 단계에서 만듭니다.
 > 자세한 내용: [spec.md](spec.md)
 
 ## 준비물
@@ -31,11 +31,19 @@ RECALLNOTE_DB_PATH=/tmp/practice.db npm run dev
 ```
 `RECALLNOTE_DB_PATH`로 DB 파일 위치를 바꿀 수 있어서, 진짜 기록과 섞이지 않습니다.
 
+## 지금 쓸 수 있는 것
+- `/cards` 카드 목록: 검색(질문·답), 태그로 거르기, 최근 순, 50장씩 "더 보기"
+- `/cards/new` 새 카드, `/cards/[id]` 보기, `/cards/[id]/edit` 수정
+- 삭제하면 `/archive`(보관함)로 가고, 거기서 복원할 수 있어요 (완전 삭제는 없음)
+
 ## 폴더 구조
 ```
 migrations/   DB 구조를 만드는 번호 붙은 SQL (0001_init.sql ...)  ← 적용된 파일은 수정 금지
 seed/         예시 데이터 SQL
-src/lib/db/   DB 연결, 마이그레이션 실행기, seed 실행기
+src/lib/db/   DB 연결, 마이그레이션 실행기, seed 실행기, 트랜잭션 도우미
+src/lib/      cards.ts(카드 SQL 모음), card-input.ts(입력 검사)
+src/app/      화면(홈, cards, archive)
+src/components/ 폼·확인 창 등 화면 조각
 scripts/      db:migrate, db:seed 명령
 tests/        DB 테스트
 docs/         화면 목록, DB 설계, 핵심 쿼리 모음(queries.md)
