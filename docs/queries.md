@@ -87,6 +87,27 @@ WHERE ______ AND ______;
 
 ---
 
+## 연습 문제 ⑤ 틀린 횟수가 많은 카드 3개 (직접 써 보기)
+
+**문제**: `reviews`에서 결과가 `wrong`인 기록을 카드별로 세어서, 많은 순으로 3개만 보여준다.
+
+```sql
+SELECT c.question, count(*) AS wrong_count
+FROM cards c
+JOIN reviews r ON r.card_id = ______
+WHERE r.result = ______
+GROUP BY ______
+ORDER BY ______ DESC
+LIMIT 3;
+```
+
+**힌트**
+1. `JOIN ... ON`에는 "두 표에서 같은 카드를 가리키는 열끼리" 같다고 씁니다. 왼쪽은 `r.card_id`, 오른쪽은 `cards`의 번호예요.
+2. 결과 글자는 `'wrong'`처럼 따옴표로 감싸요. (연습 ④에서 배운 것!)
+3. `ORDER BY`에는 `SELECT`에서 붙인 별명을 이름만 씁니다.
+
+---
+
 ## 참고 쿼리 (정답 포함)
 
 ### 카드 하나와 그 카드의 태그 이름들
@@ -184,4 +205,19 @@ WHERE date(reviewed_at, '+9 hours') = date('now', '+9 hours');
 ```
 - `FILTER (WHERE ...)`: 이 묶음에서 조건에 맞는 줄만 센다. 한 줄에 세 숫자를 구할 때 편하다. (연습 ③은 같은 걸 `GROUP BY`로 구하는 문제)
 
-> 이후 단계에서 채울 쿼리: 이번 주 집중 시간 합계(⑤).
+### 백업에 쓰이는 쿼리
+```sql
+-- 현재 데이터에서 가장 최근에 일어난 일의 시각 (가져오기 미리보기 경고용)
+SELECT max(t) FROM (
+  SELECT max(created_at) AS t FROM cards
+  UNION ALL SELECT max(updated_at) FROM cards
+  UNION ALL SELECT max(reviewed_at) FROM reviews
+  UNION ALL SELECT max(started_at) FROM study_sessions);
+
+-- 보관함과 정상 카드를 한 번에 세기
+SELECT count(*) FILTER (WHERE deleted_at IS NULL)     AS active,
+       count(*) FILTER (WHERE deleted_at IS NOT NULL) AS archived
+FROM cards;
+```
+- `UNION ALL`: 여러 질문의 결과를 위아래로 이어 붙인다.
+- 가져오기는 `DELETE FROM ...`로 자식 표(`card_tags`, `reviews`, `study_sessions`)부터 지운 뒤 부모 표(`cards`, `tags`)를 지우고, 파일 내용을 `INSERT` 한다. 전체가 트랜잭션 하나다.

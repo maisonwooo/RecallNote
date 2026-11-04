@@ -27,6 +27,7 @@
   --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
 }
 
 @media (prefers-color-scheme: dark) {

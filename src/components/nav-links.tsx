@@ -9,6 +9,7 @@ const ITEMS = [
   { href: "/archive", label: "보관함" },
   { href: "/timer", label: "타이머" },
   { href: "/stats", label: "통계" },
+  { href: "/backup", label: "백업" },
   { href: "/settings", label: "설정" },
 ];
 

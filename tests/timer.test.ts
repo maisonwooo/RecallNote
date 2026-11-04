@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, test } from "node:test";
 import type { DatabaseSync } from "node:sqlite";
 import { openAndMigrate } from "../src/lib/db/connection.ts";
-import { formatClock, formatDuration } from "../src/lib/format.ts";
+import { formatClock, formatDuration, formatSeoul } from "../src/lib/format.ts";
 import {
   getSettings,
   parseSettingsForm,
@@ -207,6 +207,12 @@ describe("설정", () => {
 });
 
 describe("시간 표시", () => {
+  test("formatSeoul: UTC를 KST(서울)로 바꾸고 KST 표시를 붙인다", () => {
+    assert.equal(formatSeoul("2026-11-04T05:30:00.000Z"), "2026. 11. 4. 오후 2:30 KST");
+    assert.equal(formatSeoul("2026-11-04T15:00:00.000Z"), "2026. 11. 5. 오전 12:00 KST"); // 서울 자정 넘김
+    assert.equal(formatSeoul("이상한 값"), "이상한 값"); // 읽을 수 없으면 그대로
+  });
+
   test("formatDuration / formatClock", () => {
     assert.deepEqual([0, 30, 60, 1500, 3600, 6000, 7260].map(formatDuration), ["0분", "1분 미만", "1분", "25분", "1시간", "1시간 40분", "2시간 1분"]);
     assert.deepEqual([-5, 0, 1, 999, 1000, 61_000, 3_000_000].map(formatClock), ["00:00", "00:00", "00:01", "00:01", "00:01", "01:01", "50:00"]);

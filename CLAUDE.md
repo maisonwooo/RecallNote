@@ -38,6 +38,12 @@
 - 테스트·검증 땐 항상 `RECALLNOTE_DB_PATH`를 임시 파일로 지정하고, 검증 빌드는 `RECALLNOTE_DIST_DIR=.next-verify`, 포트 3100을 쓴다.
 - 이 프로젝트의 Next.js 버전은 기존 지식과 다를 수 있다. 코드를 쓰기 전 `node_modules/next/dist/docs/`의 관련 문서를 확인한다(AGENTS.md).
 
+## 백업(가져오기) 안전 규칙
+- 백업 코드는 `src/lib/backup/`에만 둔다. 가져오기는 **전체 교체**만 지원하고, 반드시 ① `parseBackup`으로 엄격 검사 ② 바꾸기 직전 **안전 백업 저장**(실패하면 중단) ③ `withTransaction`으로 지우고 넣기 순서를 지킨다. 안전 백업을 끄는 옵션을 만들지 않는다.
+- 백업 라우트(`/backup/*`)는 `checkLocalRequest`(Host·Origin 검사)를 거치고, 쓰기 요청은 `x-recallnote: 1` 헤더를 요구한다. GET 라우트는 `await connection()`을 먼저 부른다.
+- 새 열·표를 추가하는 마이그레이션을 만들면 같은 작업에서 `format.ts`, `export.ts`, `validate.ts`, `import.ts`와 백업 테스트를 함께 고치고 `BACKUP_VERSION`을 올릴지 정한다(옛 파일을 계속 읽을 수 있게).
+- 테스트와 검증은 임시 DB·임시 폴더만 쓴다. 가져오기 테스트가 진짜 `data/`나 `data/backups/`에 쓰지 않게 `snapshotDir`을 항상 임시 폴더로 넘긴다.
+
 ## git 규칙
 - `.gitignore`에 `data/`, `*.db`, `*.db-journal`, `node_modules`, `.next`, `.env*` 를 넣고, 첫 커밋 전에 `git status`로 빠졌는지 보여준다.
 - 큰 기능은 `feature/...` 브랜치에서 작업하고, 사용자가 확인하면 main에 merge한다.

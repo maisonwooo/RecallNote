@@ -1,12 +1,13 @@
-/** UTC 시각 문자열을 서울 시간으로 보기 좋게 바꾼다. 예: 2026. 11. 4. 오후 2:30 */
+/** UTC 시각 문자열을 KST(한국 표준시, 서울) 시간으로 보기 좋게 바꾼다. 어느 시간대인지 보이게 뒤에 KST를 붙인다. 예: 2026. 11. 4. 오후 2:30 KST */
 export function formatSeoul(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return new Intl.DateTimeFormat("ko-KR", {
+  const text = new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
+  return `${text} KST`;
 }
 
 /** 초를 "1시간 40분", "25분" 처럼 보여준다. 1분 미만이면 "1분 미만", 0이면 "0분". */
