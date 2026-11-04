@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
+import { Duration } from "@/components/duration";
 import { getDb } from "@/lib/db/connection.ts";
 import { formatDuration } from "@/lib/format.ts";
 import { getWeekStats } from "@/lib/timer.ts";
@@ -18,11 +19,15 @@ async function StatsContent() {
       <div className="mb-8 grid grid-cols-2 gap-3">
         <div className="panel">
           <p className="text-sm text-muted">오늘</p>
-          <p className="text-3xl font-semibold">{formatDuration(stats.todaySeconds)}</p>
+          <p className="display-num text-3xl font-semibold">
+            <Duration seconds={stats.todaySeconds} />
+          </p>
         </div>
         <div className="panel">
           <p className="text-sm text-muted">이번 주 (월~일)</p>
-          <p className="text-3xl font-semibold">{formatDuration(stats.weekSeconds)}</p>
+          <p className="display-num text-3xl font-semibold">
+            <Duration seconds={stats.weekSeconds} />
+          </p>
         </div>
       </div>
 
@@ -89,7 +94,7 @@ async function StatsContent() {
 
       {stats.weekSeconds === 0 && (
         <p className="mt-6 text-muted">
-          아직 이번 주 기록이 없어요. <Link href="/timer">타이머를 시작해 보세요.</Link>
+          아직 이번 주 기록이 없어요. <Link href="/timer" className="text-link">타이머를 시작해 보세요.</Link>
         </p>
       )}
     </>
@@ -99,7 +104,7 @@ async function StatsContent() {
 export default function StatsPage() {
   return (
     <>
-      <h1 className="mb-6 text-2xl font-semibold">통계</h1>
+      <h1 className="mb-6 text-2xl font-semibold page-title">통계</h1>
       <Suspense fallback={<p className="text-muted">불러오는 중…</p>}>
         <StatsContent />
       </Suspense>

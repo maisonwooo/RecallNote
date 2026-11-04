@@ -37,7 +37,7 @@ async function ArchiveContent() {
 export default function ArchivePage() {
   return (
     <>
-      <h1 className="mb-2 text-2xl font-semibold">보관함</h1>
+      <h1 className="mb-2 text-2xl font-semibold page-title">보관함</h1>
       <p className="mb-6 text-muted">삭제한 카드가 여기 있어요. 복원하면 카드 목록으로 돌아갑니다.</p>
       <Suspense fallback={<p className="text-muted">불러오는 중…</p>}>
         <ArchiveContent />

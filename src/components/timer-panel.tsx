@@ -128,7 +128,7 @@ export function TimerPanel({ initial, serverNow, focusMinutes, breakMinutes }: P
       {timer.phase === "idle" && (
         <div>
           <p className="mb-6 text-muted">
-            집중 {focusMinutes}분 → 휴식 {breakMinutes}분. 시간은 <a href="/settings">설정</a>에서 바꿀 수 있어요.
+            집중 {focusMinutes}분 → 휴식 {breakMinutes}분. 시간은 <a href="/settings" className="text-link">설정</a>에서 바꿀 수 있어요.
           </p>
           <button type="button" disabled={busy} onClick={() => void call(startTimerAction)} className="btn btn-primary text-lg">
             집중 시작 ({focusMinutes}분)
@@ -139,7 +139,7 @@ export function TimerPanel({ initial, serverNow, focusMinutes, breakMinutes }: P
       {timer.phase === "focus" && (
         <div>
           <p className="text-muted">집중 중 · {timer.plannedMinutes}분</p>
-          <p className="my-2 text-7xl font-semibold tabular-nums" role="timer" aria-label={`남은 시간 ${clock}`}>
+          <p className="display-num clock-lg my-2 text-7xl font-semibold tabular-nums" role="timer" aria-label={`남은 시간 ${clock}`}>
             {clock}
           </p>
           <button
@@ -158,7 +158,7 @@ export function TimerPanel({ initial, serverNow, focusMinutes, breakMinutes }: P
       {timer.phase === "break" && (
         <div>
           <p className="text-muted">휴식 중 · {timer.breakMinutes}분</p>
-          <p className="my-2 text-5xl font-semibold tabular-nums" role="timer" aria-label={`남은 휴식 ${clock}`}>
+          <p className="display-num my-2 text-5xl font-semibold tabular-nums" role="timer" aria-label={`남은 휴식 ${clock}`}>
             {clock}
           </p>
           <div className="panel my-6">

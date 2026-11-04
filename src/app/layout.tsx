@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
+import { NavLinks, NavLinksPlain } from "@/components/nav-links";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,17 +13,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <header className="border-b border-border">
-          <nav className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3">
-            <Link href="/" className="text-lg font-semibold no-underline">
+        <header className="site-header">
+          <nav className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-x-1 gap-y-1 px-6 py-3">
+            <Link href="/" className="brand mr-3">
               RecallNote
             </Link>
-            <Link href="/review">복습</Link>
-            <Link href="/cards">카드</Link>
-            <Link href="/archive">보관함</Link>
-            <Link href="/timer">타이머</Link>
-            <Link href="/stats">통계</Link>
-            <Link href="/settings">설정</Link>
+            {/* 현재 주소를 읽는 부분만 Suspense 안에 둔다. 읽기 전에는 강조 없이 같은 링크를 보여준다. */}
+            <Suspense fallback={<NavLinksPlain />}>
+              <NavLinks />
+            </Suspense>
             <Link href="/cards/new" className="btn btn-primary ml-auto">
               새 카드
             </Link>

@@ -26,7 +26,7 @@ async function EditCard({ params }: { params: PageProps<"/cards/[id]/edit">["par
 export default function EditCardPage(props: PageProps<"/cards/[id]/edit">) {
   return (
     <>
-      <h1 className="mb-6 text-2xl font-semibold">카드 수정</h1>
+      <h1 className="mb-6 text-2xl font-semibold page-title">카드 수정</h1>
       <Suspense fallback={<p className="text-muted">불러오는 중…</p>}>
         <EditCard params={props.params} />
       </Suspense>

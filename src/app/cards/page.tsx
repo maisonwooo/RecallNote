@@ -65,7 +65,7 @@ async function CardsContent({ searchParams }: { searchParams: PageProps<"/cards"
         <p className="mb-4 text-muted">
           {q && <>검색어 “{q}” </>}
           {tag && <>태그 “{tag}” </>}
-          결과 · <Link href="/cards">필터 지우기</Link>
+          결과 · <Link href="/cards" className="text-link">필터 지우기</Link>
         </p>
       )}
 
@@ -75,7 +75,7 @@ async function CardsContent({ searchParams }: { searchParams: PageProps<"/cards"
             "조건에 맞는 카드가 없어요."
           ) : (
             <>
-              아직 카드가 없어요. <Link href="/cards/new">첫 카드를 만들어 보세요.</Link>
+              아직 카드가 없어요. <Link href="/cards/new" className="text-link">첫 카드를 만들어 보세요.</Link>
             </>
           )}
         </div>
@@ -116,7 +116,7 @@ async function CardsContent({ searchParams }: { searchParams: PageProps<"/cards"
 export default function CardsPage(props: PageProps<"/cards">) {
   return (
     <>
-      <h1 className="mb-6 text-2xl font-semibold">카드</h1>
+      <h1 className="mb-6 text-2xl font-semibold page-title">카드</h1>
       <Suspense fallback={<p className="text-muted">불러오는 중…</p>}>
         <CardsContent searchParams={props.searchParams} />
       </Suspense>

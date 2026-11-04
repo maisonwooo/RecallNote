@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { countCards } from "@/lib/cards.ts";
 import { getDb } from "@/lib/db/connection.ts";
+import { Duration } from "@/components/duration";
 import { formatDuration } from "@/lib/format.ts";
 import { EXTRA_BATCH, getReviewOverview } from "@/lib/review.ts";
 import { getWeekStats } from "@/lib/timer.ts";
@@ -22,7 +23,7 @@ async function Overview() {
         {review.toStudy > 0 ? (
           <>
             <p className="mb-4">
-              복습할 카드 <span className="text-2xl font-semibold tabular-nums">{review.toStudy}</span>장
+              복습할 카드 <span className="stat-num tabular-nums">{review.toStudy}</span>장
               <span className="text-muted">
                 {" "}
                 · 오늘 {review.doneToday}장 했음 (상한 {review.limit}장)
@@ -54,7 +55,9 @@ async function Overview() {
       <div className="panel">
         <h2 className="mb-1 text-sm font-normal text-muted">공부 타이머</h2>
         <p className="mb-4">
-          오늘 집중 <span className="text-xl font-semibold tabular-nums">{formatDuration(focus.todaySeconds)}</span>
+          오늘 집중 <span className="stat-num tabular-nums">
+            <Duration seconds={focus.todaySeconds} />
+          </span>
           <span className="text-muted"> · 이번 주 {formatDuration(focus.weekSeconds)}</span>
         </p>
         <Link href="/timer" className="btn">
@@ -64,7 +67,7 @@ async function Overview() {
 
       <div className="panel">
         <p>
-          카드 <span className="text-xl font-semibold tabular-nums">{active}</span>장
+          카드 <span className="stat-num tabular-nums">{active}</span>장
           {archived > 0 && <span className="text-muted"> · 보관함 {archived}장</span>}
         </p>
       </div>
@@ -75,7 +78,7 @@ async function Overview() {
 export default function Home() {
   return (
     <>
-      <h1 className="mb-2 text-3xl font-semibold">RecallNote</h1>
+      <h1 className="mb-2 text-3xl font-semibold page-title">RecallNote</h1>
       <p className="mb-8 text-muted">배운 것을 카드로 남기고, 잊기 전에 다시 봅니다.</p>
       <Suspense fallback={<p className="text-muted">불러오는 중…</p>}>
         <Overview />

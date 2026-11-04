@@ -1,15 +1,20 @@
 @import "tailwindcss";
 
-/* 순수 흰색/검정 대신 살짝 부드러운 색 (⑦단계에서 더 다듬는다) */
+/* 시안 toss: 옅은 회색 바탕 + 거의 흰 카드 + 토스 파랑. 모든 색은 대비를 계산해서 골랐다. */
 :root {
-  --background: #f6f4ef;
-  --foreground: #2b2a27;
-  --muted: #6b675f;
-  --surface: #fbfaf6;
-  --border: #d9d5ca;
-  --accent: #35654f;
-  --accent-soft: #e3ece6;
-  --danger: #9c3a2a;
+  --background: #f2f4f6;
+  --foreground: #191f28;
+  --muted: #586271;
+  --surface: #fcfcfd;
+  --border: #e5e8eb;
+  --accent: #3182f6; /* 막대·큰 강조 (대비 3.6) */
+  --accent-strong: #1b64da; /* 링크·태그 글자 (대비 5.3) */
+  --accent-soft: #e8f3ff;
+  --button: #1b64da; /* 주요 버튼 배경, 흰 글자 대비 5.4 */
+  --on-button: #ffffff;
+  --danger: #d12a37;
+  --danger-soft: #ffeef0;
+  --shadow: 0 1px 2px rgb(25 31 40 / 0.05);
 }
 
 @theme inline {
@@ -19,20 +24,26 @@
   --color-surface: var(--surface);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
   --color-danger: var(--danger);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1e1f22;
-    --foreground: #e4e2dc;
-    --muted: #a09c93;
-    --surface: #26272b;
-    --border: #3b3c41;
-    --accent: #8fc2a8;
-    --accent-soft: #2b3a33;
-    --danger: #e59a8a;
+    --background: #17171c;
+    --foreground: #f2f4f6;
+    --muted: #9ea4b0;
+    --surface: #202027;
+    --border: #2e2f38;
+    --accent: #4e9bff;
+    --accent-strong: #7ab3ff;
+    --accent-soft: #1f2d44;
+    --button: #4e9bff;
+    --on-button: #0b1220;
+    --danger: #ff8c95;
+    --danger-soft: #3a2226;
+    --shadow: none;
   }
 }
 
@@ -56,39 +67,144 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-strong);
   outline-offset: 2px;
 }
 
 @layer components {
   .btn {
-    @apply inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface px-4 py-2 text-base no-underline;
+    display: inline-flex;
+    min-height: 3rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    padding: 0.6rem 1.25rem;
+    color: var(--accent-strong);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-decoration: none;
+    transition: filter 0.15s;
   }
   .btn:hover {
-    @apply border-accent;
+    filter: brightness(0.96);
   }
   .btn-primary {
-    @apply border-accent bg-accent font-medium;
-    color: var(--background);
+    background: var(--button);
+    color: var(--on-button);
+  }
+  .btn-primary:hover {
+    filter: brightness(1.08);
   }
   .btn-danger {
-    @apply text-danger;
+    background: var(--danger-soft);
+    color: var(--danger);
   }
   .btn:disabled {
-    @apply cursor-not-allowed opacity-60;
+    cursor: not-allowed;
+    opacity: 0.55;
   }
   .input {
-    @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-base;
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+  .input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+    outline: none;
   }
   .chip {
-    @apply inline-flex min-h-8 items-center rounded-full border border-border px-3 text-sm no-underline;
+    display: inline-flex;
+    min-height: 2rem;
+    align-items: center;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    padding: 0 0.85rem;
+    color: var(--accent-strong);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
   }
   .chip-on {
-    @apply border-accent bg-accent-soft font-medium;
+    background: var(--button);
+    color: var(--on-button);
   }
   .panel {
-    @apply rounded-xl border border-border bg-surface p-5;
+    border-radius: 20px;
+    background: var(--surface);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
   }
+}
+
+/* 아래는 일부러 layer 밖에 둬서 유틸리티 클래스보다 우선한다 */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.brand {
+  color: var(--foreground);
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+.nav-link {
+  border-radius: 999px;
+  padding: 0.375rem 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+.nav-link:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.nav-link[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+.text-link {
+  color: var(--accent-strong);
+  font-weight: 500;
+}
+.text-link:hover {
+  text-decoration: underline;
+}
+.page-title {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.display-num {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.stat-num {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+.duration-unit {
+  margin: 0 0.2em 0 0.06em;
+  color: var(--muted);
+  font-size: 0.5em;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.clock-lg {
+  font-size: clamp(4rem, 14vw, 5.5rem);
 }
 
 @media (prefers-reduced-motion: reduce) {

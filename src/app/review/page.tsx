@@ -13,7 +13,7 @@ function SummaryNumber({ label, value }: { label: string; value: number }) {
   return (
     <div className="panel text-center">
       <p className="text-sm text-muted">{label}</p>
-      <p className="text-3xl font-semibold tabular-nums">{value}</p>
+      <p className="display-num text-3xl font-semibold tabular-nums">{value}</p>
     </div>
   );
 }
@@ -46,7 +46,7 @@ async function ReviewContent({ searchParams }: { searchParams: PageProps<"/revie
 
   return (
     <>
-      <h1 className="mb-2 text-2xl font-semibold">오늘의 복습</h1>
+      <h1 className="mb-2 text-2xl font-semibold page-title">오늘의 복습</h1>
       {summary.total > 0 ? (
         <>
           <p className="mb-6 text-muted">
@@ -90,7 +90,7 @@ async function ReviewContent({ searchParams }: { searchParams: PageProps<"/revie
       )}
       {overview.dueTotal === 0 && !upcoming && summary.total === 0 && (
         <p className="mb-6">
-          <Link href="/cards/new">카드를 만들면</Link> 여기서 복습할 수 있어요.
+          <Link href="/cards/new" className="text-link">카드를 만들면</Link> 여기서 복습할 수 있어요.
         </p>
       )}
       <Link href="/" className="btn">

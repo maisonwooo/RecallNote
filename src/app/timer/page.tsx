@@ -28,7 +28,7 @@ async function TimerContent() {
       <p className="mt-6 text-muted">
         오늘 집중 <span className="tabular-nums">{formatDuration(stats.todaySeconds)}</span> · 이번 주{" "}
         <span className="tabular-nums">{formatDuration(stats.weekSeconds)}</span> ·{" "}
-        <Link href="/stats">통계 보기</Link>
+        <Link href="/stats" className="text-link">통계 보기</Link>
       </p>
     </>
   );
@@ -37,7 +37,7 @@ async function TimerContent() {
 export default function TimerPage() {
   return (
     <>
-      <h1 className="mb-6 text-2xl font-semibold">공부 타이머</h1>
+      <h1 className="mb-6 text-2xl font-semibold page-title">공부 타이머</h1>
       <Suspense fallback={<p className="text-muted">불러오는 중…</p>}>
         <TimerContent />
       </Suspense>
