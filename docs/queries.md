@@ -11,26 +11,22 @@
 
 ---
 
-## 연습 문제 ① 오늘 복습할 카드 (직접 써 보기)
+## 연습 문제 ① 오늘 복습할 카드 (풀이 완료)
 
-**조건**: 삭제되지 않았고(소프트 삭제 아님), 복습 예정일이 오늘(서울) 이전이거나 오늘인 카드.
-**순서**: 가장 오래 밀린 카드부터. 같은 날이면 상자 번호가 낮은 것부터.
-**개수**: 하루 상한 20장 (설정값 `daily_review_limit`을 쓰는 건 ④단계에서. 지금은 숫자 20을 직접 써도 됩니다.)
+삭제되지 않았고, 복습 예정일이 서울 기준 오늘이거나 그 이전인 카드. 가장 오래 밀린 카드부터, 같은 날이면 상자 번호가 낮은 것부터. 하루 상한만큼(앱에서는 `daily_review_limit`에서 오늘 한 장수를 뺀 값).
 
 ```sql
 SELECT id, question, box, due_date
 FROM cards
--- 여기를 채워 보세요
-;
+WHERE deleted_at IS NULL AND due_date <= date('now', '+9 hours')
+ORDER BY due_date, box, id
+LIMIT 20;
 ```
 
-힌트 (필요할 때만 펼쳐 보세요)
-1. `WHERE` 조건이 2개 필요해요. 하나는 `deleted_at`이 **비어 있는지**, 하나는 `due_date`와 "서울 오늘" 비교입니다.
-2. "비어 있다"는 `= NULL`이 아니라 `IS NULL`이에요. (NULL은 "값 없음"이라 `=`로 비교가 안 됩니다.)
-3. 서울 오늘은 `date('now', '+9 hours')`. `due_date`는 `YYYY-MM-DD` 문자열이라 `<=`로 비교하면 날짜 순서와 같아요.
-4. 정렬은 `ORDER BY` 뒤에 열을 쉼표로 이어요. 개수 제한은 `LIMIT`.
-
-정답은 직접 써서 보내 주시면 확인해 드릴게요. (정답을 바로 알고 싶으면 "정답 보여줘"라고 하세요.)
+- `IS NULL`(비어 있다), `AND`(그리고), `<=`(작거나 같다), `ORDER BY` 뒤에는 열 이름을 쉼표로 이어 2순위를 붙인다.
+- 마지막 `id`는 앱에서 순서가 매번 똑같도록 붙인 세 번째 기준이다.
+- 예시 데이터 결과: 4장 (3번 → 1번 → 5번 → 2번).
+- 앱 코드: `src/lib/review.ts`의 `getReviewQueue`
 
 ---
 
@@ -53,6 +49,24 @@ ORDER BY card_count DESC;
 - `AS card_count`는 별명이라 `ORDER BY`에서는 `c.` 없이 이름만 쓴다.
 - 문제에 없는 조건(예: `due_date`)을 끼워 넣으면 다른 질문이 된다.
 - 예시 데이터 결과: 보안 3, http 2, git 1, 쉘 1.
+
+---
+
+## 연습 문제 ③ 오늘 복습 결과 세기 (직접 써 보기)
+
+**문제**: 서울 기준 오늘 복습한 기록을 결과(`result`)별로 센다. (결과는 `right` / `unsure` / `wrong` 세 줄)
+
+```sql
+SELECT result, ______ AS n
+FROM reviews
+WHERE ______
+GROUP BY ______;
+```
+
+**힌트**
+1. 세기와 묶기는 연습 ②와 같은 모양이에요. 이번엔 `result`별로 묶습니다.
+2. `reviewed_at`은 UTC라서 `date(reviewed_at, '+9 hours')`로 서울 날짜로 바꿔요.
+3. 서울 오늘은 `date('now', '+9 hours')`. 두 날짜가 같은지 비교합니다.
 
 ---
 
@@ -128,4 +142,29 @@ INSERT OR IGNORE INTO card_tags (card_id, tag_id) VALUES (:id, :tag_id);
 COMMIT;                                                         -- 중간에 오류가 나면 ROLLBACK 으로 전부 취소
 ```
 
-> 이후 단계에서 채울 쿼리: 복습 결과 반영(트랜잭션), 이번 주 집중 시간 합계, 태그 검색, 글자 검색.
+### 복습 평가 저장 (트랜잭션 안에서, `applyReview`)
+```sql
+BEGIN;
+SELECT box, due_date FROM cards WHERE id = :id AND deleted_at IS NULL;   -- 오늘 대상(due_date <= 오늘)이 아니면 여기서 끝
+UPDATE cards SET box = :new_box, due_date = date(:today, '+4 days') WHERE id = :id;   -- 간격은 새 상자 기준: 1,2,4,8,16일
+INSERT INTO reviews (card_id, result, box_before, box_after) VALUES (:id, :result, :old_box, :new_box);
+COMMIT;
+```
+- 이미 오늘 처리된 카드는 `due_date`가 미래라서 첫 `SELECT` 뒤에 멈춘다. 그래서 같은 요청이 두 번 와도 한 번만 반영된다(**멱등**).
+
+### 오늘 복습한 횟수 (하루 상한 계산용)
+```sql
+SELECT count(*) FROM reviews WHERE date(reviewed_at, '+9 hours') = date('now', '+9 hours');
+```
+
+### 오늘 복습 결과 요약 (앱이 쓰는 방식: FILTER)
+```sql
+SELECT count(*) FILTER (WHERE result = 'right')  AS right_n,
+       count(*) FILTER (WHERE result = 'unsure') AS unsure_n,
+       count(*) FILTER (WHERE result = 'wrong')  AS wrong_n
+FROM reviews
+WHERE date(reviewed_at, '+9 hours') = date('now', '+9 hours');
+```
+- `FILTER (WHERE ...)`: 이 묶음에서 조건에 맞는 줄만 센다. 한 줄에 세 숫자를 구할 때 편하다. (연습 ③은 같은 걸 `GROUP BY`로 구하는 문제)
+
+> 이후 단계에서 채울 쿼리: 이번 주 집중 시간 합계(⑤).

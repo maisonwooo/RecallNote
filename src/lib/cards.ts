@@ -18,7 +18,7 @@ export type Card = {
   tags: string[];
 };
 
-type CardRow = {
+export type CardRow = {
   id: number;
   type: string;
   question: string;
@@ -72,7 +72,7 @@ function loadTags(db: DatabaseSync, ids: number[]): Map<number, string[]> {
   return map;
 }
 
-function attachTags(db: DatabaseSync, rows: CardRow[]): Card[] {
+export function attachTags(db: DatabaseSync, rows: CardRow[]): Card[] {
   const tags = loadTags(db, rows.map((row) => Number(row.id)));
   return rows.map((row) => toCard(row, tags.get(Number(row.id)) ?? []));
 }
