@@ -3,13 +3,16 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { countCards } from "@/lib/cards.ts";
 import { getDb } from "@/lib/db/connection.ts";
+import { formatDuration } from "@/lib/format.ts";
 import { EXTRA_BATCH, getReviewOverview } from "@/lib/review.ts";
+import { getWeekStats } from "@/lib/timer.ts";
 
 async function Overview() {
   await connection(); // DB는 요청마다 읽는다 (미리 만들어 둔 화면에 묻어 두지 않음)
   const db = getDb();
   const { active, archived } = countCards(db);
   const review = getReviewOverview(db);
+  const focus = getWeekStats(db, new Date());
   const capReached = review.remaining === 0 && review.dueTotal > 0;
 
   return (
@@ -49,6 +52,17 @@ async function Overview() {
       </div>
 
       <div className="panel">
+        <h2 className="mb-1 text-sm font-normal text-muted">공부 타이머</h2>
+        <p className="mb-4">
+          오늘 집중 <span className="text-xl font-semibold tabular-nums">{formatDuration(focus.todaySeconds)}</span>
+          <span className="text-muted"> · 이번 주 {formatDuration(focus.weekSeconds)}</span>
+        </p>
+        <Link href="/timer" className="btn">
+          타이머 열기
+        </Link>
+      </div>
+
+      <div className="panel">
         <p>
           카드 <span className="text-xl font-semibold tabular-nums">{active}</span>장
           {archived > 0 && <span className="text-muted"> · 보관함 {archived}장</span>}
@@ -74,7 +88,6 @@ export default function Home() {
           카드 목록
         </Link>
       </div>
-      <p className="mt-10 text-sm text-muted">공부 타이머는 다음 단계에서 만듭니다.</p>
     </>
   );
 }

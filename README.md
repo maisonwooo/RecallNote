@@ -2,7 +2,7 @@
 
 배운 개념을 "질문/답" 카드로 저장하고, 매일 복습하고, 공부 타이머와 눈 휴식까지 챙기는 **나만 쓰는 로컬 학습 노트 앱**.
 
-> 상태: ④ 오늘의 복습까지 완료. 공부 타이머·통계·백업 화면은 다음 단계에서 만듭니다.
+> 상태: ⑤ 공부 타이머·눈 휴식·통계·설정까지 완료. 백업(내보내기/가져오기) 화면은 다음 단계에서 만듭니다.
 > 자세한 내용: [spec.md](spec.md)
 
 ## 준비물
@@ -37,14 +37,17 @@ RECALLNOTE_DB_PATH=/tmp/practice.db npm run dev
 - 삭제하면 `/archive`(보관함)로 가고, 거기서 복원할 수 있어요 (완전 삭제는 없음)
 
 - `/review` 오늘의 복습: 한 장씩 질문 → 답 보기(`Space`) → 틀림/애매/맞음(`1`/`2`/`3`). 끝나면 오늘 결과 요약. 하루 상한(기본 20장)을 채우면 "더 복습하기"(10장씩)
+- `/timer` 공부 타이머: 집중 → 휴식(눈 휴식 안내). 새로고침해도 이어지고, 허용하면 끝날 때 알림(탭이 열려 있을 때만)
+- `/stats` 오늘·이번 주 집중 시간과 요일별 막대 그래프
+- `/settings` 하루 복습 상한, 집중·휴식 시간
 
 ## 폴더 구조
 ```
 migrations/   DB 구조를 만드는 번호 붙은 SQL (0001_init.sql ...)  ← 적용된 파일은 수정 금지
 seed/         예시 데이터 SQL
 src/lib/db/   DB 연결, 마이그레이션 실행기, seed 실행기, 트랜잭션 도우미
-src/lib/      cards.ts(카드 SQL 모음), card-input.ts(입력 검사), review.ts(복습 규칙·SQL), settings.ts
-src/app/      화면(홈, review, cards, archive)
+src/lib/      cards.ts(카드 SQL 모음), card-input.ts(입력 검사), review.ts(복습 규칙·SQL), timer.ts(타이머·통계), settings.ts(설정)
+src/app/      화면(홈, review, cards, archive, timer, stats, settings)
 src/components/ 폼·확인 창 등 화면 조각
 scripts/      db:migrate, db:seed 명령
 tests/        DB 테스트

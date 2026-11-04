@@ -19,6 +19,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/review">복습</Link>
             <Link href="/cards">카드</Link>
             <Link href="/archive">보관함</Link>
+            <Link href="/timer">타이머</Link>
+            <Link href="/stats">통계</Link>
+            <Link href="/settings">설정</Link>
             <Link href="/cards/new" className="btn btn-primary ml-auto">
               새 카드
             </Link>

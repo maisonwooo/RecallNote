@@ -30,6 +30,7 @@
 - 카드 SQL은 `src/lib/cards.ts`에만 둔다(db를 첫 인자로 받음). 사용자 입력은 SQL 글자에 이어 붙이지 않고 `?`로 넘긴다. 검색어의 `%`, `_`, `\`는 `escapeLike`로 처리한다.
 - 여러 줄을 함께 바꾸는 저장(카드+태그, 복습 평가)은 `withTransaction`으로 묶는다.
 - 복습 규칙(상자 이동, 간격 1·2·4·8·16일, 하루 상한, 서울 자정 경계)은 `src/lib/review.ts`에만 둔다. 날짜는 `today` 인자로 받아 테스트에서 고정한다. 평가 저장은 멱등(이미 처리된 카드는 무시)으로 유지한다.
+- 타이머는 `src/lib/timer.ts`에만 둔다. 남은 시간은 저장한 시작 시각과 `now`의 차이로 계산하고(`setInterval` 숫자를 믿지 않음) 모든 함수가 `now`를 인자로 받는다. 설정 값은 `src/lib/settings.ts`의 `SETTING_RULES` 범위로 검사한다. 화면의 `useEffect` 안에서 바로 `setState`를 부르지 않는다(린트 규칙): 브라우저 값은 `useSyncExternalStore`로 읽는다.
 - 화면 패턴: 페이지는 바깥에서 `Suspense`로 감싸고, 안쪽 async 컴포넌트에서 `await connection()` → `await params/searchParams` → DB 읽기. 폼은 Server Action(`src/app/cards/actions.ts`) + `useActionState`, 성공하면 `revalidatePath` 후 `redirect`(try 밖에서).
 - SQLite 라이브러리: **Node 내장 `node:sqlite`로 확정**. 코드는 `src/lib/db/`에 있다.
 - DB 접근은 `getDb()`(앱), `openAndMigrate(file)`(스크립트/테스트)만 쓴다. 서버 페이지에서 DB를 읽기 전에 `await connection()`(next/server)을 부른다. 이 Next.js는 Cache Components가 켜져 있어 이걸 빼면 DB 값이 미리 만들어진 화면에 굳을 수 있다.
