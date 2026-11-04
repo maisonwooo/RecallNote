@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/* 순수 흰색/검정 대신 살짝 부드러운 색 (⑦단계에서 더 다듬는다) */
+:root {
+  --background: #f6f4ef;
+  --foreground: #2b2a27;
+  --muted: #6b675f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1e1f22;
+    --foreground: #e4e2dc;
+    --muted: #a09c93;
+  }
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  /* 외부 서버에서 글꼴을 받지 않는다. Pretendard가 설치돼 있으면 쓰고, 없으면 시스템 글꼴 */
+  font-family:
+    Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR",
+    system-ui, sans-serif;
+  line-height: 1.7;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

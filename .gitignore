@@ -1,0 +1,21 @@
+# 내 학습 기록(개인 정보) - 절대 올리지 않음
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# 설치/빌드 결과
+node_modules
+.next
+out
+
+# 비밀 값
+.env*
+
+# 기타
+.DS_Store
+*.log
+next-env.d.ts
+.next-*
+tsconfig.tsbuildinfo
