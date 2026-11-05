@@ -2,7 +2,13 @@
 
 코드를 고치거나 테스트를 돌리고 싶은 사람을 위한 문서입니다. 앱을 그냥 쓰기만 한다면 [README.md](../README.md)만 보면 됩니다.
 
-작업 규칙(안전 규칙 포함)은 [CLAUDE.md](../CLAUDE.md), 기획은 [spec.md](../spec.md)에 있습니다.
+기획과 설계 원칙은 [spec.md](../spec.md)에 있습니다. 코드를 고칠 때 특히 지킬 점은 아래와 같습니다.
+
+- `src/proxy.ts`의 주소(Host) 검사와 `next.config.ts`의 보안 헤더를 없애거나 느슨하게 하지 않습니다.
+- 서버는 `127.0.0.1`에서만 열고, 외부로 데이터를 보내지 않습니다.
+- `data/`의 실제 DB를 덮어쓰지 않습니다. 테스트는 임시 DB(`RECALLNOTE_DB_PATH`)를 씁니다.
+- 적용된 마이그레이션 파일은 고치지 않고 새 번호로 추가합니다.
+- 카드 SQL은 `src/lib/cards.ts`, 복습 규칙은 `src/lib/review.ts`, 타이머는 `src/lib/timer.ts`에만 둡니다.
 
 ## 준비물
 - Node.js 22.5 이상 (이 프로젝트는 v26에서 확인). SQLite는 Node 내장(`node:sqlite`)을 쓰므로 따로 설치할 DB 프로그램이 없습니다.
@@ -82,4 +88,3 @@ data/         내 DB 파일이 생기는 곳 (git에 올라가지 않음)
 - [screens.md](screens.md) 화면 목록
 - [db-design.md](db-design.md) DB 설계
 - [queries.md](queries.md) 핵심 쿼리 모음과 연습 문제
-- [CLAUDE.md](../CLAUDE.md) 작업 규칙

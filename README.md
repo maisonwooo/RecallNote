@@ -155,8 +155,7 @@ cp -R data ~/Desktop/recallnote-data-backup
 ---
 
 ## 8. 개발에 참여하거나 코드를 고치고 싶다면
-테스트, 폴더 구조, 환경 변수는 [docs/developer.md](docs/developer.md)에 정리되어 있습니다. 작업 규칙은 [CLAUDE.md](CLAUDE.md)에 있어요.
-
+테스트, 폴더 구조, 환경 변수는 [docs/developer.md](docs/developer.md)에 정리되어 있습니다.
 ## 문서
 - [spec.md](spec.md) 기획서
 - [docs/screens.md](docs/screens.md) 화면 목록
