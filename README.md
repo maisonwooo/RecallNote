@@ -11,6 +11,48 @@
 
 ---
 
+## 스크린샷
+
+예시 데이터로 찍은 화면입니다. (보는 사람의 라이트/다크 설정에 맞춰 바뀝니다.)
+
+**카드 목록** · 검색과 태그 거르기
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/cards-dark.png">
+  <img alt="카드 목록 화면" src="docs/images/cards-light.png">
+</picture>
+
+**복습** · `Space`로 답 보기, `1`/`2`/`3`으로 평가
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/review-dark.png">
+  <img alt="복습 화면" src="docs/images/review-light.png">
+</picture>
+
+**공부 타이머** · 집중 시간과 휴식
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/timer-dark.png">
+  <img alt="공부 타이머 화면" src="docs/images/timer-light.png">
+</picture>
+
+**통계** · 요일별 집중 시간
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/stats-dark.png">
+  <img alt="통계 화면" src="docs/images/stats-light.png">
+</picture>
+
+**설정** · 복습 상한, 타이머 시간, 글자 크기
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/settings-dark.png">
+  <img alt="설정 화면" src="docs/images/settings-light.png">
+</picture>
+
+**백업** · 내보내기와 가져오기
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/backup-dark.png">
+  <img alt="백업 화면" src="docs/images/backup-light.png">
+</picture>
+
+---
+
 ## 1. 설치와 실행
 
 ### 필요한 것
