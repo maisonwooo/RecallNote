@@ -157,6 +157,7 @@ export function LearnPanel({ initial, initialError }: Props) {
                       <span className="min-w-0">
                         <span className="block whitespace-pre-wrap break-words font-medium">{row.question}</span>
                         <span className="mt-1 block whitespace-pre-wrap break-words text-muted">{row.answer}</span>
+                        {row.context && <span className="mt-1 block break-words text-sm text-muted">출처: {row.context}</span>}
                         <span className="mt-2 flex flex-wrap gap-2 text-sm text-muted">
                           <span>{row.date}</span>
                           <span className="chip">{row.project}</span>

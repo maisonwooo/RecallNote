@@ -132,6 +132,64 @@ describe("표 읽기", () => {
   });
 });
 
+describe("맥락 열 (선택): 카드의 출처가 된다", () => {
+  const H8 = "| 날짜 | 프로젝트 | 주제 | 몰랐던 점 | 카드 질문 | 맥락 | 내가 이해한 한 줄 | 카드화 |\n|---|---|---|---|---|---|---|---|";
+  const r8 = (ctx: string, q = "Q?", a = "A") => `| 2026-11-04 | ClaudeMeter | 4회차 함수 | N | ${q} | ${ctx} | ${a} | |`;
+
+  test("맥락 열이 있으면 읽고, 있는 줄의 출처에 '맥락 (학습 기록 날짜)'로 들어간다", () => {
+    const log = parseLearningLog(`${H8}\n${r8("ClaudeMeter 4회차 (`extension/lib/backoff.js`)")}`);
+    assert.equal(log.rows.length, 1);
+    assert.equal(log.rows[0].context, "ClaudeMeter 4회차 (`extension/lib/backoff.js`)");
+    assert.ok(log.rows[0].ready);
+    assert.equal(toCardInput(log.rows[0]).source, "ClaudeMeter 4회차 (`extension/lib/backoff.js`) (학습 기록 2026-11-04)");
+  });
+
+  test("맥락 칸이 비어 있거나 열 자체가 없어도 읽힌다 (출처는 '학습 기록 날짜')", () => {
+    const empty = parseLearningLog(`${H8}\n${r8("")}`);
+    assert.ok(empty.rows[0].ready);
+    assert.equal(toCardInput(empty.rows[0]).source, "학습 기록 2026-11-04");
+    const noColumn = parseLearningLog(table(row("2026-11-04", "P", "T", "N", "Q?", "A")));
+    assert.equal(noColumn.rows[0].context, "");
+    assert.equal(toCardInput(noColumn.rows[0]).source, "학습 기록 2026-11-04");
+  });
+
+  test("맥락이 너무 길면 줄여서 출처 200자 제한을 지킨다", () => {
+    const [r] = parseLearningLog(`${H8}\n${r8("가".repeat(500))}`).rows;
+    const source = toCardInput(r).source!;
+    assert.ok(source.length <= 200, `길이 ${source.length}`);
+    assert.match(source, /…\(학습 기록 2026-11-04\)$|… \(학습 기록 2026-11-04\)$/);
+  });
+
+  test("맥락은 표식(key)에 영향이 없다: 맥락을 고쳐도 같은 줄이다", () => {
+    const k1 = parseLearningLog(`${H8}\n${r8("맥락 v1")}`).rows[0].key;
+    const k2 = parseLearningLog(`${H8}\n${r8("맥락 v2")}`).rows[0].key;
+    assert.equal(k1, k2);
+  });
+
+  test("카드로 만들면 출처에 맥락이 들어가고, 칸 순서가 바뀌어도 읽는다", () => {
+    const text = [
+      "| 맥락 | 카드 질문 | 내가 이해한 한 줄 | 날짜 | 주제 | 프로젝트 | 몰랐던 점 |",
+      "|---|---|---|---|---|---|---|",
+      "| 어디서 나온 것 | 질문? | 답이다 | 2026-11-05 | 주제 | P | 몰랐던 것 |",
+    ].join("\n");
+    const log = parseLearningLog(text);
+    const db2 = openAndMigrate(join(dir, "ctx.db"));
+    const { cardIds } = importRows(db2, log, [log.rows[0].key]);
+    const card = getCard(db2, cardIds[0])!;
+    assert.equal(card.source, "어디서 나온 것 (학습 기록 2026-11-05)");
+    assert.equal(card.question, "질문?");
+    db2.close();
+  });
+
+  test("실제 학습 기록 파일 모양(8열, 52줄 규모)과 같은 형식도 문제없이 읽는다", () => {
+    const rows = Array.from({ length: 52 }, (_, i) => `| 2026-11-0${(i % 5) + 1} | P | 주제${i} | 몰랐던 점${i} | 질문${i}? | 맥락${i} | ${i % 13 === 0 ? "" : `답${i}`} | |`);
+    const log = parseLearningLog(`${H8}\n${rows.join("\n")}`);
+    assert.equal(log.rows.length, 52);
+    assert.equal(log.problems.length, 0);
+    assert.equal(log.rows.filter((r) => r.ready).length, 52 - 4); // 답이 빈 줄 0, 13, 26, 39
+  });
+});
+
 describe("파일 읽기", () => {
   test("정상 파일, 없는 파일, 바로가기, 폴더, 너무 큰 파일", () => {
     const file = join(dir, "confusions.md");

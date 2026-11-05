@@ -15,6 +15,7 @@ export type LogRow = {
   notKnown: string;
   question: string;
   answer: string;
+  context: string; // 선택 열 "맥락": 어느 프로젝트의 어느 파일·함수·연습에서 나왔는지 (없으면 빈 글자)
 };
 export type ParsedRow = LogRow & { ready: boolean; reason: string | null };
 export type ParsedLog = { rows: ParsedRow[]; problems: string[] };
@@ -26,7 +27,11 @@ const COLUMNS = {
   notKnown: "몰랐던 점",
   question: "카드 질문",
   answer: "내가 이해한 한 줄",
+  context: "맥락", // 선택 열 (없어도 된다)
 } as const;
+
+/** 반드시 있어야 하는 열 */
+const REQUIRED = ["date", "project", "topic", "notKnown", "question", "answer"] as const;
 
 /** 표의 한 줄을 칸으로 나눈다. 칸 안의 \| 는 | 글자 하나로 읽는다. 표 줄이 아니면 null. */
 function splitRow(line: string): string[] | null {
@@ -65,7 +70,7 @@ export function parseLearningLog(text: string): ParsedLog {
   const missing: string[] = [];
   for (const [field, name] of Object.entries(COLUMNS) as [keyof typeof COLUMNS, string][]) {
     index[field] = header.indexOf(name);
-    if (index[field] < 0) missing.push(name);
+    if (index[field] < 0 && (REQUIRED as readonly string[]).includes(field)) missing.push(name);
   }
   if (missing.length > 0) return { rows: [], problems: [`표에 필요한 열이 없어요: ${missing.join(", ")}`] };
 
@@ -85,7 +90,7 @@ export function parseLearningLog(text: string): ParsedLog {
       problems.push(`${line}번째 줄: 칸 수가 머리글과 달라요 (${cells.length}칸, 머리글은 ${header.length}칸).`);
       continue;
     }
-    const get = (field: keyof typeof COLUMNS) => cells[index[field]];
+    const get = (field: keyof typeof COLUMNS) => (index[field] < 0 ? "" : cells[index[field]]);
     const date = get("date");
     const project = get("project");
     const topic = get("topic");
@@ -96,6 +101,7 @@ export function parseLearningLog(text: string): ParsedLog {
     }
     const question = get("question");
     const answer = get("answer");
+    const context = get("context");
     const key = makeKey(date, project, topic, notKnown);
 
     let reason: string | null = null;
@@ -105,7 +111,7 @@ export function parseLearningLog(text: string): ParsedLog {
     else if (question.length > LIMITS.question) reason = `카드 질문이 ${LIMITS.question}자를 넘어요`;
     else if (answer.length > LIMITS.answer) reason = `이해한 한 줄이 ${LIMITS.answer}자를 넘어요`;
     seen.add(key);
-    rows.push({ key, line, date, project, topic, notKnown, question, answer, ready: reason === null, reason });
+    rows.push({ key, line, date, project, topic, notKnown, question, answer, context, ready: reason === null, reason });
   }
   return { rows, problems };
 }
@@ -116,7 +122,10 @@ function tagName(raw: string): string | null {
   return name !== "" && name.length <= LIMITS.tagLength ? name : null;
 }
 
-/** 후보 한 줄을 카드 입력값으로 바꾼다. 태그는 프로젝트와 주제, 출처는 "학습 기록 날짜". */
+/** 맥락 글이 너무 길면 줄인다 (카드 출처는 200자까지) */
+const MAX_CONTEXT = 140;
+
+/** 후보 한 줄을 카드 입력값으로 바꾼다. 태그는 프로젝트와 주제, 출처는 "맥락 (학습 기록 날짜)" 또는 맥락이 없으면 "학습 기록 날짜". */
 export function toCardInput(row: LogRow): CardInput {
   const seen = new Set<string>();
   const tags: string[] = [];
@@ -127,5 +136,7 @@ export function toCardInput(row: LogRow): CardInput {
       tags.push(name);
     }
   }
-  return { question: row.question, answer: row.answer, source: `학습 기록 ${row.date}`, tags };
+  const context = row.context.length > MAX_CONTEXT ? `${row.context.slice(0, MAX_CONTEXT)}…` : row.context;
+  const source = context ? `${context} (학습 기록 ${row.date})` : `학습 기록 ${row.date}`;
+  return { question: row.question, answer: row.answer, source, tags };
 }

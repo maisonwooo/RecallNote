@@ -4,7 +4,7 @@ import { MAX_LOG_BYTES, parseLearningLog, type ParsedLog, type ParsedRow } from 
 import { displayPath, readLearningLog } from "./read.ts";
 import { buildSyncOverview } from "./sync.ts";
 
-export type ClientRow = { key: string; line: number; date: string; project: string; topic: string; question: string; answer: string };
+export type ClientRow = { key: string; line: number; date: string; project: string; topic: string; question: string; answer: string; context: string };
 export type ClientOverview = {
   source: "file" | "paste";
   path: string | null; // 파일일 때만 (~ 로 줄인 모양)
@@ -31,7 +31,7 @@ export function loadLog(text?: unknown): LoadedLog {
   return { ok: true, log: parseLearningLog(file.text), source: "file", path: displayPath(file.path) };
 }
 
-const clientRow = (r: ParsedRow): ClientRow => ({ key: r.key, line: r.line, date: r.date, project: r.project, topic: r.topic, question: r.question, answer: r.answer });
+const clientRow = (r: ParsedRow): ClientRow => ({ key: r.key, line: r.line, date: r.date, project: r.project, topic: r.topic, question: r.question, answer: r.answer, context: r.context });
 
 export function toClientOverview(db: DatabaseSync, loaded: Extract<LoadedLog, { ok: true }>): ClientOverview {
   const o = buildSyncOverview(db, loaded.log);

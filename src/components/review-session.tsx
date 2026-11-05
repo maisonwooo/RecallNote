@@ -101,6 +101,9 @@ export function ReviewSession({ cards }: { cards: ReviewCardData[] }) {
 
       {note && <p className="mb-4 text-sm text-muted">{note}</p>}
 
+      {/* 질문을 보기 전에 어느 프로젝트·주제의 이야기인지 알 수 있게 태그를 먼저 보여 준다 */}
+      {card.tags.length > 0 && <p className="mb-3 break-words text-sm text-muted">{card.tags.join(" · ")}</p>}
+
       <h1 className="mb-1 text-sm font-normal text-muted">질문</h1>
       <p className="mb-8 whitespace-pre-wrap break-words text-2xl font-semibold leading-snug">{card.question}</p>
 
