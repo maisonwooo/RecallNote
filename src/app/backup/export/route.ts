@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { getDb } from "@/lib/db/connection.ts";
 import { buildBackup } from "@/lib/backup/export.ts";
 import { seoulStamp } from "@/lib/backup/format.ts";
-import { checkLocalRequest } from "@/lib/backup/guard.ts";
+import { checkLocalRequest } from "@/lib/local-guard.ts";
 
 /** 전체 데이터를 JSON 한 파일로 내려받는다. DB는 읽기만 한다. */
 export async function GET(request: Request) {

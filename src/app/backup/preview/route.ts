@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db/connection.ts";
-import { checkLocalRequest } from "@/lib/backup/guard.ts";
+import { checkLocalRequest } from "@/lib/local-guard.ts";
 import { buildPreview } from "@/lib/backup/import.ts";
 import { readBackupText } from "@/lib/backup/request.ts";
 import { parseBackup } from "@/lib/backup/validate.ts";

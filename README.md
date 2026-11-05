@@ -21,7 +21,8 @@ npm run dev        # http://127.0.0.1:3000 (내 컴퓨터 안에서만 열림)
 | `npm run dev` | 개발 서버 (127.0.0.1에서만) |
 | `npm run db:migrate` | 서버 없이 DB 만들기/마이그레이션 적용 확인 |
 | `npm run db:seed` | 예시 카드 6장 넣기. **카드나 태그가 이미 있으면 거부**함 |
-| `npm test` | DB 테스트 (임시 DB만 사용. 내 `data/`는 건드리지 않음) |
+| `npm run backup:auto` | 자동 백업 한 번 실행 (마지막 백업 후 7일이 안 지났으면 건너뜀) |
+| `npm test` | 전체 테스트 (임시 DB·임시 폴더만 사용. 내 `data/`는 건드리지 않음) |
 | `npm run lint` | 코드 검사 |
 
 ### 예시 데이터로 먼저 둘러보기 (내 진짜 DB 대신 연습용 DB)
@@ -47,11 +48,14 @@ RECALLNOTE_DB_PATH=/tmp/practice.db npm run dev
 migrations/   DB 구조를 만드는 번호 붙은 SQL (0001_init.sql ...)  ← 적용된 파일은 수정 금지
 seed/         예시 데이터 SQL
 src/lib/db/   DB 연결, 마이그레이션 실행기, seed 실행기, 트랜잭션 도우미
+src/lib/backup/ 백업 파일 형식·내보내기·검사·가져오기·CSV·자동 백업
+src/lib/local-guard.ts 요청 주소(Host·Origin) 검사 / src/proxy.ts 모든 요청에 적용
 src/lib/      cards.ts(카드 SQL 모음), card-input.ts(입력 검사), review.ts(복습 규칙·SQL), timer.ts(타이머·통계), settings.ts(설정)
-src/app/      화면(홈, review, cards, archive, timer, stats, settings)
+src/app/      화면(홈, review, cards, archive, timer, stats, backup, settings)
 src/components/ 폼·확인 창 등 화면 조각
-scripts/      db:migrate, db:seed 명령
-tests/        DB 테스트
+scripts/      db:migrate, db:seed, backup:auto 명령과 자동 백업 설치·제거 스크립트
+public/fonts/ Pretendard 글꼴(라이선스 포함)
+tests/        테스트 (DB, 카드, 복습, 타이머·설정, 백업, 자동 백업, 주소 검사)
 docs/         화면 목록, DB 설계, 핵심 쿼리 모음(queries.md)
 data/         내 DB 파일이 생기는 곳 (git에 올라가지 않음)
 ```

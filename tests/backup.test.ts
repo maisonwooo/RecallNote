@@ -10,7 +10,7 @@ import { openAndMigrate } from "../src/lib/db/connection.ts";
 import { applyBackup, buildPreview, writeSnapshot } from "../src/lib/backup/import.ts";
 import { buildBackup } from "../src/lib/backup/export.ts";
 import { cardsToCsv, csvCell } from "../src/lib/backup/csv.ts";
-import { checkLocalRequest } from "../src/lib/backup/guard.ts";
+import { checkAppRequest, checkLocalRequest, isAllowedHost } from "../src/lib/local-guard.ts";
 import { MAX_BACKUP_BYTES, seoulStamp, type BackupData } from "../src/lib/backup/format.ts";
 import { parseBackup } from "../src/lib/backup/validate.ts";
 import { applyReview } from "../src/lib/review.ts";
@@ -70,6 +70,9 @@ describe("왕복: 내보내기 → 가져오기", () => {
     assert.deepEqual(result.counts, { cards: 2, archived: 1, tags: 3, reviews: 2, sessions: 2 });
     assert.equal(count(b, "SELECT count(*) AS n FROM cards WHERE question LIKE '%가져오면%'"), 0);
     assert.equal(count(b, "SELECT count(*) AS n FROM tags WHERE name = '옛태그'"), 0);
+    // 가져온 뒤 DB 자체가 온전한지 (깨진 연결·손상이 없는지)
+    assert.deepEqual(b.prepare("PRAGMA foreign_key_check").all(), []);
+    assert.deepEqual({ ...(b.prepare("PRAGMA integrity_check").get() as object) }, { integrity_check: "ok" });
   });
 
   test("글자는 한 글자도 바뀌지 않는다 (HTML, 이모지, 줄바꿈, 탭, 따옴표)", () => {
@@ -335,6 +338,32 @@ describe("요청 검사 (다른 사이트가 몰래 보내는 요청 막기)", (
     assert.ok(checkLocalRequest(req({ host: "127.0.0.1:3000", "sec-fetch-site": "cross-site" })));
     assert.ok(checkLocalRequest(req({ host: "127.0.0.1:3000" }), { requireHeader: true })); // 헤더 없음
     assert.ok(checkLocalRequest(req({ host: "127.0.0.1:3000", "x-recallnote": "0" }), { requireHeader: true }));
+  });
+});
+
+describe("앱 전체 주소 검사 (proxy)", () => {
+  const req = (method: string, headers: Record<string, string>) => ({ method, headers: new Headers(headers) });
+
+  test("isAllowedHost: 내 컴퓨터 주소만 통과 (대소문자 무시, 포트 있어도 됨)", () => {
+    for (const ok of ["127.0.0.1", "127.0.0.1:3000", "localhost:3100", "LOCALHOST:3000", "[::1]:3000", "[::1]"]) assert.ok(isAllowedHost(ok), ok);
+    for (const bad of ["", null, undefined, "evil.example", "evil.example:3000", "127.0.0.1.evil.example", "localhost.evil.example:3000",
+      "evil.example#127.0.0.1", "127.0.0.1@evil.example", "0.0.0.0:3000", "192.168.0.5:3000", "[::2]:3000", "127.0.0.2"]) assert.ok(!isAllowedHost(bad as string), String(bad));
+  });
+
+  test("읽기 요청(GET): Host 만 본다 — 가짜 도메인이면 거부, 정상 주소면 통과", () => {
+    assert.equal(checkAppRequest(req("GET", { host: "127.0.0.1:3000" })), null);
+    assert.equal(checkAppRequest(req("GET", { host: "localhost:3000", "sec-fetch-site": "none" })), null); // 주소창으로 직접
+    assert.equal(checkAppRequest(req("HEAD", { host: "127.0.0.1:3000" })), null);
+    assert.ok(checkAppRequest(req("GET", { host: "evil.example:3000" })));
+    assert.ok(checkAppRequest(req("GET", {})));
+  });
+
+  test("바꾸는 요청(POST 등): 다른 사이트의 Origin·Sec-Fetch-Site 도 거부", () => {
+    assert.equal(checkAppRequest(req("POST", { host: "127.0.0.1:3000", origin: "http://127.0.0.1:3000", "sec-fetch-site": "same-origin" })), null);
+    assert.ok(checkAppRequest(req("POST", { host: "127.0.0.1:3000", origin: "https://evil.example" })));
+    assert.ok(checkAppRequest(req("POST", { host: "127.0.0.1:3000", "sec-fetch-site": "cross-site" })));
+    assert.ok(checkAppRequest(req("DELETE", { host: "evil.example" })));
+    assert.ok(checkAppRequest(req("PUT", { host: "127.0.0.1:3000", origin: "null" })));
   });
 });
 
