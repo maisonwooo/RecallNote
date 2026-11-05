@@ -132,7 +132,9 @@
 | `docs/screens.md` | 화면 목록과 배치 |
 | `docs/db-design.md` | DB 설계안 |
 | `docs/queries.md` | 핵심 SQL 모음과 연습 문제 |
-| `README.md` | 실행 방법, 백업 방법 |
+| `README.md` | 사용자용 안내: 설치·실행, 사용법, 백업 방법, 개인정보 |
+| `docs/developer.md` | 개발자용 안내: 명령, 환경 변수, 폴더 구조, 학습 기록 표 형식 |
+| `LICENSE` | MIT 라이선스 |
 | `CLAUDE.md` | 작업 규칙 |
 
 ## 9. 진행 순서
