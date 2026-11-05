@@ -97,7 +97,18 @@ erDiagram
 | filename | TEXT | **PK** (예: `0001_init.sql`) |
 | applied_at | TEXT | NOT NULL, DEFAULT 현재 UTC |
 
+### learning_sources (학습 기록에서 카드를 만든 줄의 기록) — 마이그레이션 0002
+| 열 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| source_key | TEXT | **PK**, CHECK(소문자 16진수 16자리) | 줄의 고유 표식. 날짜+프로젝트+주제+몰랐던 점을 해시한 값 |
+| status | TEXT | NOT NULL, CHECK(`imported`/`skipped`) | 카드로 만들었음 / 건너뛰기로 함 |
+| card_id | INTEGER | NULL 가능, FK → cards(id) **ON DELETE SET NULL** | 만든 카드. 건너뜀이면 NULL (CHECK) |
+| created_at | TEXT | NOT NULL, DEFAULT 현재 UTC | |
+
 ## 3. 왜 이렇게 나눴나 (쉬운 설명)
+
+**learning_sources를 cards 안의 열로 두지 않고 따로 둔 이유**
+"이 줄은 이미 처리했다"는 기억은 카드의 성질이 아니라 **줄(파일 쪽)의 성질**이다. 카드 표에 열로 넣으면 ① 카드를 지울 때 기억도 같이 사라져 같은 줄이 되살아나고, ② "건너뛰기"(카드가 없는 상태)를 담을 곳이 없다. 따로 두면 카드를 보관함에 보내거나 진짜 지워도(`ON DELETE SET NULL`) 표식은 남는다.
 
 **카드와 태그를 왜 한 표에 안 넣었나?**
 카드 한 장에 태그가 여러 개고, 태그 하나에 카드가 여러 장이다(**다대다**). 한 칸에 `"git,http"`처럼 넣으면 ① 태그별 검색·개수 세기가 어렵고 ② 오타(`Git`/`git`)가 쌓이고 ③ 태그 이름을 고치려면 모든 카드를 고쳐야 한다. 그래서 태그는 `tags`에 **한 번만** 적고, 연결은 `card_tags`에 한 줄씩 적는다. `PK(card_id, tag_id)` 덕분에 같은 연결이 두 번 들어가지 않는다.

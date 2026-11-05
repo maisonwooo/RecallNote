@@ -41,8 +41,14 @@
 ## 백업(가져오기) 안전 규칙
 - 백업 코드는 `src/lib/backup/`에만 둔다. 가져오기는 **전체 교체**만 지원하고, 반드시 ① `parseBackup`으로 엄격 검사 ② 바꾸기 직전 **안전 백업 저장**(실패하면 중단) ③ `withTransaction`으로 지우고 넣기 순서를 지킨다. 안전 백업을 끄는 옵션을 만들지 않는다.
 - 백업 라우트(`/backup/*`)는 `checkLocalRequest`(Host·Origin 검사)를 거치고, 쓰기 요청은 `x-recallnote: 1` 헤더를 요구한다. GET 라우트는 `await connection()`을 먼저 부른다.
-- 새 열·표를 추가하는 마이그레이션을 만들면 같은 작업에서 `format.ts`, `export.ts`, `validate.ts`, `import.ts`와 백업 테스트를 함께 고치고 `BACKUP_VERSION`을 올릴지 정한다(옛 파일을 계속 읽을 수 있게).
+- 새 열·표를 추가하는 마이그레이션을 만들면 같은 작업에서 `format.ts`, `export.ts`, `validate.ts`, `import.ts`와 백업 테스트를 함께 고치고 `BACKUP_VERSION`을 올릴지 정한다(옛 파일을 계속 읽을 수 있게 `SUPPORTED_VERSIONS`에 남긴다). 지금 버전은 2(학습 기록 표식 포함)다.
 - 테스트와 검증은 임시 DB·임시 폴더만 쓴다. 가져오기 테스트가 진짜 `data/`나 `data/backups/`에 쓰지 않게 `snapshotDir`을 항상 임시 폴더로 넘긴다.
+
+## 학습 기록 가져오기 규칙
+- 코드는 `src/lib/learning-log/`(parse·read·sync·api)와 `src/app/learn/`에 있다. `~/learning-log/confusions.md`는 **읽기만** 하고 앱이 절대 수정하지 않는다(그 파일 하나만, 바로가기 거부, 2MB 제한).
+- 카드는 반드시 `importRows`로 만든다: 서버가 파일(또는 글)을 **다시 읽어** 사용자가 고른 표식과 맞는 줄만 처리하고, `learning_sources`에 표식을 남기며, 한 트랜잭션으로 실행한다. 화면이 보낸 질문·답은 쓰지 않는다.
+- 표식 계산식(날짜+프로젝트+주제+몰랐던 점)을 바꾸면 기존 표식과 어긋나 같은 줄이 다시 후보가 되므로 바꾸지 않는다. 바꿔야 하면 마이그레이션과 호환 계획을 먼저 보고한다.
+- 표 형식(열 이름)은 전역 규칙 `~/.claude/CLAUDE.md`의 학습 기록 형식과 맞춘다. 테스트는 임시 파일(`RECALLNOTE_LEARNING_LOG`)과 임시 DB만 쓴다.
 
 ## 자동 백업 규칙
 - 로직은 `src/lib/backup/auto.ts`, 실행은 `scripts/auto-backup.ts`다. DB는 **읽기 전용**으로만 열고, 7일 규칙·최근 8개 정리·경로 검증(날짜 폴더 이름만, 바로가기 제외)·지우기 전 로그를 바꾸면 `tests/auto-backup.test.ts`도 함께 고친다.

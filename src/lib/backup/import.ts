@@ -60,7 +60,7 @@ export function applyBackup(
 
   withTransaction(db, () => {
     // 자식 표부터 지운다 (외래키 순서)
-    db.exec("DELETE FROM card_tags; DELETE FROM reviews; DELETE FROM study_sessions; DELETE FROM cards; DELETE FROM tags;");
+    db.exec("DELETE FROM learning_sources; DELETE FROM card_tags; DELETE FROM reviews; DELETE FROM study_sessions; DELETE FROM cards; DELETE FROM tags;");
 
     const tagId = new Map<string, number>();
     const insertTag = db.prepare("INSERT INTO tags (name, created_at) VALUES (?, ?)");
@@ -87,6 +87,10 @@ export function applyBackup(
       "INSERT INTO study_sessions (id, started_at, planned_minutes, ended_at, status, focus_seconds) VALUES (?, ?, ?, ?, ?, ?)",
     );
     for (const s of data.studySessions) insertSession.run(s.id, s.startedAt, s.plannedMinutes, s.endedAt, s.status, s.focusSeconds);
+
+    // 학습 기록 표식 (버전 1 파일에는 없어서 빈 목록 = 비워진다. 버전 1 데이터는 이 기능 이전이라 가져온 카드가 없다)
+    const insertSource = db.prepare("INSERT INTO learning_sources (source_key, status, card_id, created_at) VALUES (?, ?, ?, ?)");
+    for (const l of data.learningSources) insertSource.run(l.key, l.status, l.cardId, l.createdAt);
 
     // 파일에 있는 설정만 덮어쓴다 (없는 설정은 현재 값을 유지)
     const upsert = db.prepare(

@@ -50,6 +50,9 @@ function fill(db: DatabaseSync) {
   saveSettings(db, { dailyReviewLimit: 33, focusMinutes: 25, breakMinutes: 5, fontSize: 18 });
   db.prepare("INSERT INTO study_sessions (started_at,planned_minutes,ended_at,status,focus_seconds) VALUES ('2026-11-02T01:00:00.000Z',50,'2026-11-02T01:50:00.000Z','completed',3000)").run();
   startSession(db, 50, NOW); // 진행 중 1개
+  // 학습 기록 표식: 카드로 만든 줄 1개, 건너뛴 줄 1개
+  db.prepare("INSERT INTO learning_sources (source_key, status, card_id, created_at) VALUES ('0123456789abcdef', 'imported', ?, '2026-11-05T01:00:00.000Z')").run(c1);
+  db.prepare("INSERT INTO learning_sources (source_key, status, card_id, created_at) VALUES ('fedcba9876543210', 'skipped', NULL, '2026-11-05T02:00:00.000Z')").run();
 }
 
 const strip = (d: BackupData) => ({ ...d, exportedAt: "-" });
@@ -94,6 +97,30 @@ describe("왕복: 내보내기 → 가져오기", () => {
     assert.equal(mk(b, "새 카드"), 4);
     restoreCard(b, 3); // 보관함 카드도 정상 동작
     assert.equal(count(b, "SELECT count(*) AS n FROM cards WHERE deleted_at IS NULL"), 4);
+  });
+
+  test("옛 버전(1) 파일로 가져오면 학습 기록 표식도 비워진다 (그 시절엔 가져온 카드가 없다)", () => {
+    fill(b);
+    assert.equal(count(b, "SELECT count(*) AS n FROM learning_sources"), 2);
+    const old = valid();
+    delete old.learningSources;
+    old.version = 1;
+    const parsed = parse(old);
+    assert.ok(parsed.ok);
+    applyBackup(b, parsed.data, { snapshotDir: join(dir, "snap") });
+    assert.equal(count(b, "SELECT count(*) AS n FROM learning_sources"), 0);
+  });
+
+  test("학습 기록 표식(가져온 줄, 건너뛴 줄)이 왕복해도 그대로다", () => {
+    fill(a);
+    const parsed = parseBackup(JSON.stringify(buildBackup(a, NOW)));
+    assert.ok(parsed.ok);
+    applyBackup(b, parsed.data, { snapshotDir: join(dir, "snap") });
+    const rows = b.prepare("SELECT source_key, status, card_id FROM learning_sources ORDER BY source_key").all().map((r) => ({ ...r }));
+    assert.deepEqual(rows, [
+      { source_key: "0123456789abcdef", status: "imported", card_id: 1 },
+      { source_key: "fedcba9876543210", status: "skipped", card_id: null },
+    ]);
   });
 
   test("빈 DB를 가져와도 동작한다 (전부 비우기)", () => {
@@ -203,7 +230,7 @@ describe("파일 검사: 틀린 파일은 통째로 거부", () => {
     bad("[]", /모양/);
     bad("null", /모양/);
     bad('{"format":"other"}', /백업 파일이 아니에요/);
-    bad(JSON.stringify({ ...valid(), version: 2 }), /더 새로운 버전/);
+    bad(JSON.stringify({ ...valid(), version: 3 }), /더 새로운 버전/);
     bad(JSON.stringify({ ...valid(), version: 0 }), /지원하지 않는/);
     const noVersion = valid(); delete noVersion.version;
     bad(JSON.stringify(noVersion), /지원하지 않는/);
@@ -240,6 +267,12 @@ describe("파일 검사: 틀린 파일은 통째로 거부", () => {
     ["모르는 설정 이름", (d) => { d.settings.evil = "1"; }, /settings\.evil/],
     ["설정 범위 밖", (d) => { d.settings.focus_minutes = "9999"; }, /focus_minutes/],
     ["설정이 숫자 아님", (d) => { d.settings.break_minutes = "abc"; }, /break_minutes/],
+    ["표식 형식(대문자)", (d) => { d.learningSources[0].key = "0123456789ABCDEF"; }, /learningSources\[0\]\.key/],
+    ["표식 중복", (d) => { d.learningSources[1].key = d.learningSources[0].key; }, /두 번/],
+    ["표식 상태 값", (d) => { d.learningSources[0].status = "done"; }, /status/],
+    ["표식이 없는 카드를 가리킴", (d) => { d.learningSources[0].cardId = 9999; }, /cardId/],
+    ["건너뜀인데 카드가 있음", (d) => { d.learningSources[1].cardId = 1; }, /cardId/],
+    ["표식 목록 빠짐(버전 2)", (d) => { delete d.learningSources; }, /learningSources/],
     ["글자 크기 범위 밖(너무 큼)", (d) => { d.settings.font_size = "99"; }, /font_size/],
     ["글자 크기 범위 밖(너무 작음)", (d) => { d.settings.font_size = "9"; }, /font_size/],
   ];
@@ -252,6 +285,19 @@ describe("파일 검사: 틀린 파일은 통째로 거부", () => {
       assert.match(r.errors.join("\n"), pattern);
     });
   }
+
+  test("옛 버전(1) 파일도 읽힌다: 학습 기록 표식이 빈 목록이 된다", () => {
+    const old = valid();
+    delete old.learningSources;
+    old.version = 1;
+    const r = parse(old);
+    assert.ok(r.ok);
+    assert.equal(r.data.version, 2);
+    assert.deepEqual(r.data.learningSources, []);
+    old.learningSources = [{ key: "bad" }]; // 버전 1 파일의 모르는 항목은 버려진다
+    const r2 = parse(old);
+    assert.ok(r2.ok && r2.data.learningSources.length === 0);
+  });
 
   test("오류가 아주 많아도 20개까지만 알려 준다", () => {
     const data = valid();

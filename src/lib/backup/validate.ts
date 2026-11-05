@@ -3,8 +3,8 @@
 import { LIMITS } from "../card-input.ts";
 import { SETTING_RULES } from "../settings.ts";
 import {
-  BACKUP_FORMAT, BACKUP_VERSION, MAX_BACKUP_BYTES, MAX_ROWS, SETTING_KEYS,
-  type BackupCard, type BackupData, type BackupReview, type BackupSession, type BackupTag, type Counts,
+  BACKUP_FORMAT, BACKUP_VERSION, MAX_BACKUP_BYTES, MAX_ROWS, SETTING_KEYS, SUPPORTED_VERSIONS,
+  type BackupCard, type BackupData, type BackupLearningSource, type BackupReview, type BackupSession, type BackupTag, type Counts,
 } from "./format.ts";
 
 export type ParseResult = { ok: true; data: BackupData } | { ok: false; errors: string[] };
@@ -41,7 +41,8 @@ export function parseBackup(text: string): ParseResult {
   if (isInt(root.version) && root.version > BACKUP_VERSION) {
     return { ok: false, errors: ["더 새로운 버전의 앱에서 만든 백업 파일이에요. 앱을 먼저 업데이트해 주세요."] };
   }
-  if (root.version !== BACKUP_VERSION) return { ok: false, errors: ["지원하지 않는 백업 파일 버전이에요."] };
+  if (!(SUPPORTED_VERSIONS as readonly unknown[]).includes(root.version)) return { ok: false, errors: ["지원하지 않는 백업 파일 버전이에요."] };
+  const fileVersion = root.version as number;
 
   const errors: string[] = [];
   const err = (path: string, message: string) => {
@@ -51,7 +52,8 @@ export function parseBackup(text: string): ParseResult {
 
   if (!validIso(root.exportedAt)) err("exportedAt", "시각 모양이 아니에요.");
 
-  const arrays = ["tags", "cards", "reviews", "studySessions"] as const;
+  // 버전 2부터 learningSources 목록이 필수다 (버전 1 파일에는 없다)
+  const arrays = (fileVersion >= 2 ? ["tags", "cards", "reviews", "studySessions", "learningSources"] : ["tags", "cards", "reviews", "studySessions"]) as readonly (keyof typeof MAX_ROWS)[];
   for (const key of arrays) {
     if (!Array.isArray(root[key])) err(key, "목록이어야 해요.");
     else if ((root[key] as unknown[]).length > MAX_ROWS[key]) err(key, `항목이 너무 많아요 (최대 ${MAX_ROWS[key]}개).`);
@@ -190,10 +192,29 @@ export function parseBackup(text: string): ParseResult {
   });
   if (running > 1) err("studySessions", "진행 중(running)인 타이머 기록은 하나만 있을 수 있어요.");
 
+  // ---- 학습 기록 표식 (버전 2) ----
+  const learningSources: BackupLearningSource[] = [];
+  const sourceKeys = new Set<string>();
+  if (fileVersion >= 2) {
+    (root.learningSources as unknown[]).forEach((raw, i) => {
+      if (tooMany()) return;
+      const p = `learningSources[${i}]`;
+      if (!isObj(raw)) return err(p, "객체여야 해요.");
+      if (typeof raw.key !== "string" || !/^[0-9a-f]{16}$/.test(raw.key)) return err(`${p}.key`, `소문자 16진수 16자리여야 해요 (값: ${show(raw.key)}).`);
+      if (sourceKeys.has(raw.key)) return err(`${p}.key`, "같은 표식이 두 번 나와요.");
+      sourceKeys.add(raw.key);
+      if (raw.status !== "imported" && raw.status !== "skipped") return err(`${p}.status`, `imported/skipped 중 하나여야 해요 (값: ${show(raw.status)}).`);
+      if (raw.cardId !== null && (!isInt(raw.cardId) || !cardIds.has(raw.cardId))) return err(`${p}.cardId`, `비어 있거나(null) 있는 카드를 가리켜야 해요 (값: ${show(raw.cardId)}).`);
+      if (raw.status === "skipped" && raw.cardId !== null) return err(`${p}.cardId`, "건너뜀(skipped)에는 카드가 없어야 해요.");
+      if (!validIso(raw.createdAt)) return err(`${p}.createdAt`, "시각 모양이 아니에요.");
+      learningSources.push({ key: raw.key, status: raw.status, cardId: raw.cardId as number | null, createdAt: raw.createdAt });
+    });
+  }
+
   if (errors.length > 0) return { ok: false, errors };
   return {
     ok: true,
-    data: { format: BACKUP_FORMAT, version: BACKUP_VERSION, exportedAt: root.exportedAt as string, settings, tags, cards, reviews, studySessions: sessions },
+    data: { format: BACKUP_FORMAT, version: BACKUP_VERSION, exportedAt: root.exportedAt as string, settings, tags, cards, reviews, studySessions: sessions, learningSources },
   };
 }
 

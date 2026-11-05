@@ -88,16 +88,22 @@ function replaceTags(db: DatabaseSync, cardId: number, names: string[]): void {
   }
 }
 
+/**
+ * 카드 한 장과 태그를 저장한다(트랜잭션 없음). 이미 트랜잭션 안에서 여러 카드를 만들 때 쓴다.
+ * 트랜잭션은 중첩할 수 없어서, 혼자 쓸 때는 아래 createCard 를 쓴다.
+ */
+export function insertCard(db: DatabaseSync, input: CardInput): number {
+  const result = db
+    .prepare(`INSERT INTO cards (question, answer, source, due_date) VALUES (?, ?, ?, ${TODAY_SEOUL})`)
+    .run(input.question, input.answer, input.source);
+  const id = Number(result.lastInsertRowid);
+  replaceTags(db, id, input.tags);
+  return id;
+}
+
 /** 새 카드를 만든다. 상자 1, 복습 예정일은 서울 오늘. 카드와 태그는 한 트랜잭션으로 저장한다. */
 export function createCard(db: DatabaseSync, input: CardInput): number {
-  return withTransaction(db, () => {
-    const result = db
-      .prepare(`INSERT INTO cards (question, answer, source, due_date) VALUES (?, ?, ?, ${TODAY_SEOUL})`)
-      .run(input.question, input.answer, input.source);
-    const id = Number(result.lastInsertRowid);
-    replaceTags(db, id, input.tags);
-    return id;
-  });
+  return withTransaction(db, () => insertCard(db, input));
 }
 
 /** 카드를 고친다. 없거나 보관함에 있는 카드면 false. */

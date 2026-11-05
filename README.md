@@ -42,6 +42,7 @@ RECALLNOTE_DB_PATH=/tmp/practice.db npm run dev
 - `/stats` 오늘·이번 주 집중 시간과 요일별 막대 그래프
 - `/settings` 하루 복습 상한, 집중·휴식 시간, 글자 크기(14~24px)
 - `/backup` JSON 내보내기·가져오기, 카드 CSV 내보내기
+- `/learn` 학습 기록(`~/learning-log/confusions.md`)에서 카드 만들기: 후보를 보고 체크한 것만 카드로. 홈에 "새 학습 기록 N개" 알림
 
 ## 폴더 구조
 ```
@@ -94,6 +95,14 @@ npm run backup:auto                      # 지금 한 번 직접 실행해 보�
 ```
 cp -R data ~/Desktop/recallnote-data-backup
 ```
+
+## 학습 기록 → 카드
+`~/learning-log/confusions.md`의 표에서 **`카드 질문`**과 **`내가 이해한 한 줄`**이 모두 있는 줄이 카드 후보가 됩니다.
+1. 홈의 "새 학습 기록 N개" 또는 카드 목록의 "학습 기록에서 가져오기"로 `/learn`을 연다.
+2. 만들 줄을 체크하고 **카드로 만들기**를 누른다. (안 만들 줄은 **건너뛰기**, 나중에 되돌릴 수 있어요.)
+3. 한 번 처리한 줄은 다시 나오지 않고, 카드를 지워도 되살아나지 않아요. 파일은 앱이 읽기만 하고 바꾸지 않습니다.
+- 답이 비어 있는 줄은 후보가 아니에요. 답을 채우면 다음에 후보로 나와요.
+- 파일 위치를 바꾸려면 `RECALLNOTE_LEARNING_LOG=/경로/파일.md npm run dev`처럼 실행하세요.
 
 ## 글꼴
 Pretendard Variable(SIL OFL 1.1)을 `public/fonts/`에 넣어 두고 앱이 직접 보여줍니다. 실행 중 외부 서버 연결은 없어요. 라이선스는 `public/fonts/Pretendard-LICENSE.txt`에 있습니다.

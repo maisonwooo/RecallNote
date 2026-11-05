@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db/connection.ts";
 import { Duration } from "@/components/duration";
 import { formatDuration } from "@/lib/format.ts";
 import { EXTRA_BATCH, getReviewOverview } from "@/lib/review.ts";
+import { countFresh } from "@/lib/learning-log/api.ts";
 import { getWeekStats } from "@/lib/timer.ts";
 
 async function Overview() {
@@ -14,6 +15,7 @@ async function Overview() {
   const { active, archived } = countCards(db);
   const review = getReviewOverview(db);
   const focus = getWeekStats(db, new Date());
+  const freshLog = countFresh(db); // 새 학습 기록(카드로 만들 수 있는 줄) 개수
   const capReached = review.remaining === 0 && review.dueTotal > 0;
 
   return (
@@ -64,6 +66,18 @@ async function Overview() {
           타이머 열기
         </Link>
       </div>
+
+      {freshLog > 0 && (
+        <div className="panel">
+          <h2 className="mb-1 text-sm font-normal text-muted">학습 기록</h2>
+          <p className="mb-4">
+            새 학습 기록 <span className="stat-num tabular-nums">{freshLog}</span>개를 카드로 만들 수 있어요.
+          </p>
+          <Link href="/learn" className="btn">
+            확인하기
+          </Link>
+        </div>
+      )}
 
       <div className="panel">
         <p>

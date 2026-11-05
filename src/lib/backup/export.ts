@@ -57,6 +57,11 @@ export function buildBackup(db: DatabaseSync, now: Date = new Date()): BackupDat
       id: Number(r.id), cardId: Number(r.card_id), result: r.result,
       boxBefore: Number(r.box_before), boxAfter: Number(r.box_after), reviewedAt: r.reviewed_at,
     })),
+    learningSources: (
+      db.prepare("SELECT source_key, status, card_id, created_at FROM learning_sources ORDER BY source_key").all() as {
+        source_key: string; status: "imported" | "skipped"; card_id: number | null; created_at: string;
+      }[]
+    ).map((l) => ({ key: l.source_key, status: l.status, cardId: l.card_id === null ? null : Number(l.card_id), createdAt: l.created_at })),
     studySessions: (
       db.prepare("SELECT id, started_at, planned_minutes, ended_at, status, focus_seconds FROM study_sessions ORDER BY id").all() as {
         id: number; started_at: string; planned_minutes: number; ended_at: string | null;

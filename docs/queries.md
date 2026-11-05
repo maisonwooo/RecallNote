@@ -221,3 +221,17 @@ FROM cards;
 ```
 - `UNION ALL`: 여러 질문의 결과를 위아래로 이어 붙인다.
 - 가져오기는 `DELETE FROM ...`로 자식 표(`card_tags`, `reviews`, `study_sessions`)부터 지운 뒤 부모 표(`cards`, `tags`)를 지우고, 파일 내용을 `INSERT` 한다. 전체가 트랜잭션 하나다.
+
+### 학습 기록 가져오기에 쓰이는 쿼리
+```sql
+-- 이미 처리한 줄의 표식과 상태 (파일에서 읽은 줄과 맞춰 본다)
+SELECT source_key, status FROM learning_sources;
+
+-- 카드로 만들 때: 카드 한 장 + 태그를 저장하고, 같은 트랜잭션 안에서 표식을 남긴다
+INSERT INTO learning_sources (source_key, status, card_id) VALUES (:key, 'imported', :card_id);
+
+-- 건너뛰기를 되돌리기 (카드로 만든 줄은 건드리지 않는다)
+DELETE FROM learning_sources WHERE source_key = :key AND status = 'skipped';
+```
+- `source_key`가 PRIMARY KEY라서 같은 줄을 두 번 넣으려 하면 DB가 막는다(마지막 방어선). 앱은 먼저 "이미 있나?"를 확인해서 건너뛴다.
+- `card_id`는 `ON DELETE SET NULL`이라, 카드를 진짜 지워도 표식은 남고 `card_id`만 비워진다.

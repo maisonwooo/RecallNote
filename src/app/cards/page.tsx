@@ -116,7 +116,12 @@ async function CardsContent({ searchParams }: { searchParams: PageProps<"/cards"
 export default function CardsPage(props: PageProps<"/cards">) {
   return (
     <>
-      <h1 className="mb-6 text-2xl font-semibold page-title">카드</h1>
+      <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+        <h1 className="text-2xl font-semibold page-title">카드</h1>
+        <Link href="/learn" className="text-link">
+          학습 기록에서 가져오기
+        </Link>
+      </div>
       <Suspense fallback={<p className="text-muted">불러오는 중…</p>}>
         <CardsContent searchParams={props.searchParams} />
       </Suspense>
