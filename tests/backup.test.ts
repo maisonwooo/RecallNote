@@ -47,7 +47,7 @@ function fill(db: DatabaseSync) {
   applyReview(db, c1, "right", "2026-11-05");
   applyReview(db, c2, "wrong", (db.prepare("SELECT date('now','+9 hours') AS d").get() as { d: string }).d);
   softDeleteCard(db, c3);
-  saveSettings(db, { dailyReviewLimit: 33, focusMinutes: 25, breakMinutes: 5 });
+  saveSettings(db, { dailyReviewLimit: 33, focusMinutes: 25, breakMinutes: 5, fontSize: 18 });
   db.prepare("INSERT INTO study_sessions (started_at,planned_minutes,ended_at,status,focus_seconds) VALUES ('2026-11-02T01:00:00.000Z',50,'2026-11-02T01:50:00.000Z','completed',3000)").run();
   startSession(db, 50, NOW); // 진행 중 1개
 }
@@ -102,7 +102,7 @@ describe("왕복: 내보내기 → 가져오기", () => {
   });
 
   test("파일에 없는 설정은 현재 값을 유지한다", () => {
-    saveSettings(b, { dailyReviewLimit: 77, focusMinutes: 20, breakMinutes: 4 });
+    saveSettings(b, { dailyReviewLimit: 77, focusMinutes: 20, breakMinutes: 4, fontSize: 20 });
     const data = valid();
     data.settings = { focus_minutes: "45" };
     const parsed = parse(data);
@@ -111,6 +111,7 @@ describe("왕복: 내보내기 → 가져오기", () => {
     const get = (k: string) => (b.prepare("SELECT value FROM settings WHERE key = ?").get(k) as { value: string }).value;
     assert.equal(get("focus_minutes"), "45");
     assert.equal(get("daily_review_limit"), "77");
+    assert.equal(get("font_size"), "20"); // 파일에 없는 설정은 현재 값 유지
   });
 });
 
@@ -236,6 +237,8 @@ describe("파일 검사: 틀린 파일은 통째로 거부", () => {
     ["모르는 설정 이름", (d) => { d.settings.evil = "1"; }, /settings\.evil/],
     ["설정 범위 밖", (d) => { d.settings.focus_minutes = "9999"; }, /focus_minutes/],
     ["설정이 숫자 아님", (d) => { d.settings.break_minutes = "abc"; }, /break_minutes/],
+    ["글자 크기 범위 밖(너무 큼)", (d) => { d.settings.font_size = "99"; }, /font_size/],
+    ["글자 크기 범위 밖(너무 작음)", (d) => { d.settings.font_size = "9"; }, /font_size/],
   ];
   for (const [name, change, pattern] of mutate) {
     test(name, () => {

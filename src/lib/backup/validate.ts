@@ -66,7 +66,7 @@ export function parseBackup(text: string): ParseResult {
       err(`settings.${key}`, "알 수 없는 설정 이름이에요.");
       continue;
     }
-    const rule = key in SETTING_RULES ? SETTING_RULES[key as keyof typeof SETTING_RULES] : { min: 10, max: 40 };
+    const rule = SETTING_RULES[key as keyof typeof SETTING_RULES];
     const n = typeof value === "string" && /^\d{1,4}$/.test(value) ? Number(value) : NaN;
     if (!(n >= rule.min && n <= rule.max)) err(`settings.${key}`, `${rule.min}~${rule.max} 사이의 숫자 글자여야 해요 (값: ${show(value)}).`);
     else settings[key] = String(n);

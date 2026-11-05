@@ -8,6 +8,7 @@ export async function saveSettingsAction(_prev: SettingsFormState, formData: For
     dailyReviewLimit: formData.get("dailyReviewLimit"),
     focusMinutes: formData.get("focusMinutes"),
     breakMinutes: formData.get("breakMinutes"),
+    fontSize: formData.get("fontSize"),
   });
   if (!parsed.ok) return { errors: parsed.errors, values: parsed.values };
 
@@ -24,6 +25,7 @@ export async function saveSettingsAction(_prev: SettingsFormState, formData: For
       dailyReviewLimit: String(parsed.value.dailyReviewLimit),
       focusMinutes: String(parsed.value.focusMinutes),
       breakMinutes: String(parsed.value.breakMinutes),
+      fontSize: String(parsed.value.fontSize),
     },
   };
 }

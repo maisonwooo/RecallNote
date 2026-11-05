@@ -175,24 +175,24 @@ describe("통계: 서울 날짜와 월요일 시작 주", () => {
 
 describe("설정", () => {
   test("기본값", () => {
-    assert.deepEqual(getSettings(db), { dailyReviewLimit: 20, focusMinutes: 50, breakMinutes: 10 });
+    assert.deepEqual(getSettings(db), { dailyReviewLimit: 20, focusMinutes: 50, breakMinutes: 10, fontSize: 16 });
   });
 
   test("저장하면 읽힌다(다시 저장해도 덮어씀)", () => {
-    saveSettings(db, { dailyReviewLimit: 30, focusMinutes: 25, breakMinutes: 5 });
-    saveSettings(db, { dailyReviewLimit: 31, focusMinutes: 25, breakMinutes: 5 });
-    assert.deepEqual(getSettings(db), { dailyReviewLimit: 31, focusMinutes: 25, breakMinutes: 5 });
+    saveSettings(db, { dailyReviewLimit: 30, focusMinutes: 25, breakMinutes: 5, fontSize: 18 });
+    saveSettings(db, { dailyReviewLimit: 31, focusMinutes: 25, breakMinutes: 5, fontSize: 20 });
+    assert.deepEqual(getSettings(db), { dailyReviewLimit: 31, focusMinutes: 25, breakMinutes: 5, fontSize: 20 });
     assert.equal((db.prepare("SELECT count(*) AS n FROM settings").get() as { n: number }).n, 4);
   });
 
   test("폼 검사: 범위·숫자 아님·소수·빈칸은 오류, 하나라도 틀리면 통째로 거부", () => {
-    const ok = parseSettingsForm({ dailyReviewLimit: " 20 ", focusMinutes: "1", breakMinutes: "60" });
+    const ok = parseSettingsForm({ dailyReviewLimit: " 20 ", focusMinutes: "1", breakMinutes: "60", fontSize: "14" });
     assert.ok(ok.ok && ok.value.focusMinutes === 1 && ok.value.breakMinutes === 60);
     for (const bad of ["0", "201", "-1", "abc", "2.5", "", "  ", "1e2", "٣"]) {
-      const r = parseSettingsForm({ dailyReviewLimit: bad, focusMinutes: "50", breakMinutes: "10" });
+      const r = parseSettingsForm({ dailyReviewLimit: bad, focusMinutes: "50", breakMinutes: "10", fontSize: "16" });
       assert.ok(!r.ok && r.errors.dailyReviewLimit, `복습 상한 "${bad}"`);
     }
-    const r = parseSettingsForm({ dailyReviewLimit: "20", focusMinutes: "181", breakMinutes: "61" });
+    const r = parseSettingsForm({ dailyReviewLimit: "20", focusMinutes: "181", breakMinutes: "61", fontSize: "16" });
     assert.ok(!r.ok);
     assert.deepEqual(Object.keys(r.errors).sort(), ["breakMinutes", "focusMinutes"]);
     assert.equal(r.values.focusMinutes, "181"); // 입력한 값을 돌려줘서 화면에 남긴다
@@ -202,7 +202,20 @@ describe("설정", () => {
   test("DB의 설정 값이 이상하면 기본값을 쓴다", () => {
     db.prepare("UPDATE settings SET value = 'x' WHERE key = 'focus_minutes'").run();
     db.prepare("UPDATE settings SET value = '999' WHERE key = 'break_minutes'").run();
-    assert.deepEqual(getSettings(db), { dailyReviewLimit: 20, focusMinutes: 50, breakMinutes: 10 });
+    assert.deepEqual(getSettings(db), { dailyReviewLimit: 20, focusMinutes: 50, breakMinutes: 10, fontSize: 16 });
+  });
+
+  test("글자 크기: 14~24 정수만, 그 밖은 오류 (기본 16)", () => {
+    const form = (fontSize: string) => parseSettingsForm({ dailyReviewLimit: "20", focusMinutes: "50", breakMinutes: "10", fontSize });
+    for (const good of ["14", "16", "24", " 20 "]) assert.ok(form(good).ok, good);
+    for (const bad of ["13", "25", "0", "-16", "16.5", "열여섯", "", "1e1"]) {
+      const r = form(bad);
+      assert.ok(!r.ok && r.errors.fontSize, `글자 크기 "${bad}"`);
+    }
+    saveSettings(db, { dailyReviewLimit: 20, focusMinutes: 50, breakMinutes: 10, fontSize: 22 });
+    assert.equal(getSettings(db).fontSize, 22);
+    db.prepare("UPDATE settings SET value = '99' WHERE key = 'font_size'").run(); // DB 값이 이상하면 기본값
+    assert.equal(getSettings(db).fontSize, 16);
   });
 });
 

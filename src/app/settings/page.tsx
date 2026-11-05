@@ -13,6 +13,7 @@ async function SettingsContent() {
         dailyReviewLimit: String(s.dailyReviewLimit),
         focusMinutes: String(s.focusMinutes),
         breakMinutes: String(s.breakMinutes),
+        fontSize: String(s.fontSize),
       }}
     />
   );

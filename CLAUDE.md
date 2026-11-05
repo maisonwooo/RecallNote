@@ -18,7 +18,7 @@
 - **`data/`의 실제 DB는 삭제·덮어쓰기 금지.** 테스트는 임시 DB 파일을 따로 만들어 한다.
 - 사용자가 켜 둔 개발 서버는 끄거나 다시 켜지 않는다. 검증은 다른 포트·다른 출력 폴더에서 하고, 내가 만든 것만 정리한다.
 - `.env` 값·토큰·키는 출력하지 않는다.
-- 사용자 입력 글은 HTML이 실행되지 않게 그린다(`dangerouslySetInnerHTML` 사용 금지).
+- 사용자 입력 글은 HTML이 실행되지 않게 그린다(`dangerouslySetInnerHTML` 사용 금지. 예외는 화면 규칙의 글자 크기 스크립트 한 곳).
 
 ## DB 규칙
 - 파일: `data/recallnote.db` (SQLite). `PRAGMA foreign_keys = ON`을 연결마다 켠다.
@@ -44,6 +44,10 @@
 - 새 열·표를 추가하는 마이그레이션을 만들면 같은 작업에서 `format.ts`, `export.ts`, `validate.ts`, `import.ts`와 백업 테스트를 함께 고치고 `BACKUP_VERSION`을 올릴지 정한다(옛 파일을 계속 읽을 수 있게).
 - 테스트와 검증은 임시 DB·임시 폴더만 쓴다. 가져오기 테스트가 진짜 `data/`나 `data/backups/`에 쓰지 않게 `snapshotDir`을 항상 임시 폴더로 넘긴다.
 
+## 자동 백업 규칙
+- 로직은 `src/lib/backup/auto.ts`, 실행은 `scripts/auto-backup.ts`다. DB는 **읽기 전용**으로만 열고, 7일 규칙·최근 8개 정리·경로 검증(날짜 폴더 이름만, 바로가기 제외)·지우기 전 로그를 바꾸면 `tests/auto-backup.test.ts`도 함께 고친다.
+- launchd 예약(`com.paul.recallnote-auto-backup`)의 설치·제거는 **사용자가 직접** `scripts/install-auto-backup.sh`, `scripts/uninstall-auto-backup.sh`로 실행한다. 이 환경은 예약 등록을 권한 검사에서 막을 수 있으니, 막히면 우회하지 말고 사용자에게 알린다.
+
 ## git 규칙
 - `.gitignore`에 `data/`, `*.db`, `*.db-journal`, `node_modules`, `.next`, `.env*` 를 넣고, 첫 커밋 전에 `git status`로 빠졌는지 보여준다.
 - 큰 기능은 `feature/...` 브랜치에서 작업하고, 사용자가 확인하면 main에 merge한다.
@@ -57,6 +61,7 @@
 
 ## 화면 규칙
 - 다크/라이트는 시스템 설정을 따른다. 부드러운 배경색(순수 흰색/검정 금지).
-- Pretendard(없으면 시스템 글꼴), 기본 16px 이상, 줄 간격 넉넉하게, 설정에서 글자 크기 조절.
+- Pretendard는 `public/fonts/`의 파일을 쓴다(외부 서버에서 받지 않음, 라이선스 파일 유지). 기본 16px 이상, 줄 간격 넉넉하게. 글자 크기는 `/settings`(14~24px)에서 조절하고 DB가 기준이며, 첫 화면 깜빡임 방지용 `<head>` 스크립트(localStorage `rn-font-size`)가 있다.
+- `dangerouslySetInnerHTML`은 이 `<head>`의 **고정된 글자 스크립트 한 곳만** 예외이고, 사용자 입력은 절대 넣지 않는다.
 - 숫자는 `tabular-nums`. 애니메이션 최소, `prefers-reduced-motion`을 따른다.
 - 복습 키보드: Space 답 보기, 1/2/3 평가.

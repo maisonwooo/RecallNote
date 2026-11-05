@@ -6,13 +6,14 @@ export const SETTING_RULES = {
   daily_review_limit: { label: "하루 복습 상한", unit: "장", min: 1, max: 200, fallback: 20 },
   focus_minutes: { label: "집중 시간", unit: "분", min: 1, max: 180, fallback: 50 },
   break_minutes: { label: "휴식 시간", unit: "분", min: 1, max: 60, fallback: 10 },
+  font_size: { label: "글자 크기", unit: "px", min: 14, max: 24, fallback: 16 },
 } as const;
 
 export type SettingKey = keyof typeof SETTING_RULES;
 
 export const DEFAULT_DAILY_REVIEW_LIMIT = SETTING_RULES.daily_review_limit.fallback;
 
-export type AppSettings = { dailyReviewLimit: number; focusMinutes: number; breakMinutes: number };
+export type AppSettings = { dailyReviewLimit: number; focusMinutes: number; breakMinutes: number; fontSize: number };
 
 function readInteger(raw: unknown, key: SettingKey): number {
   const rule = SETTING_RULES[key];
@@ -36,10 +37,11 @@ export function getSettings(db: DatabaseSync): AppSettings {
     dailyReviewLimit: readSetting(db, "daily_review_limit"),
     focusMinutes: readSetting(db, "focus_minutes"),
     breakMinutes: readSetting(db, "break_minutes"),
+    fontSize: readSetting(db, "font_size"),
   };
 }
 
-export type SettingsFormValues = { dailyReviewLimit: string; focusMinutes: string; breakMinutes: string };
+export type SettingsFormValues = { dailyReviewLimit: string; focusMinutes: string; breakMinutes: string; fontSize: string };
 export type SettingsErrors = Partial<Record<keyof SettingsFormValues, string>>;
 export type SettingsFormState = { errors?: SettingsErrors; values?: SettingsFormValues; message?: string } | null;
 
@@ -47,6 +49,7 @@ const FORM_FIELDS: { field: keyof SettingsFormValues; key: SettingKey }[] = [
   { field: "dailyReviewLimit", key: "daily_review_limit" },
   { field: "focusMinutes", key: "focus_minutes" },
   { field: "breakMinutes", key: "break_minutes" },
+  { field: "fontSize", key: "font_size" },
 ];
 
 /** 폼에서 온 글자를 검사한다. 하나라도 틀리면 아무것도 저장하지 않는다. */
@@ -80,5 +83,6 @@ export function saveSettings(db: DatabaseSync, value: AppSettings): void {
     upsert.run("daily_review_limit", String(value.dailyReviewLimit));
     upsert.run("focus_minutes", String(value.focusMinutes));
     upsert.run("break_minutes", String(value.breakMinutes));
+    upsert.run("font_size", String(value.fontSize));
   });
 }

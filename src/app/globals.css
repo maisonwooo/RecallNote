@@ -48,6 +48,15 @@
   }
 }
 
+/* Pretendard: 이 앱 폴더(public/fonts)의 파일을 쓴다. 파일을 읽는 동안에는 시스템 글꼴로 먼저 보여 준다(swap). */
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 45 920;
+  font-display: swap;
+  src: url("/fonts/PretendardVariable.woff2") format("woff2");
+}
+
 html {
   font-size: 16px;
 }
